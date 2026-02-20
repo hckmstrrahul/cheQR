@@ -59,7 +59,6 @@ Structured input forms for generating valid QR code data:
 
 ### General
 - **30+ Languages** — Internationalized UI with support for English, German, French, Japanese, Chinese, Korean, Spanish, and many more
-- **Dark Mode** — Light, dark, and system-preference modes
 - **PWA Support** — Install as a desktop or mobile app
 - **Responsive Design** — Optimized for desktop and mobile with adaptive layouts
 - **LocalStorage Persistence** — Your last configuration is automatically saved and restored

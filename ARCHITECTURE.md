@@ -126,7 +126,6 @@ cheQR uses Vue 3 Composition API with `ref` and `computed` — no external store
 | Selected preset | `QRCodeCreate.vue` | localStorage |
 | Frame settings | `QRCodeCreate.vue` | localStorage |
 | App mode (Create/Scan) | `App.vue` | None (session only) |
-| Dark mode preference | `useDarkModePreference` composable | localStorage |
 | Language preference | `LanguageSelector.vue` | localStorage |
 | Scanned data | `QRCodeScan.vue` | None (passed via ref) |
 

@@ -69,7 +69,7 @@ const isModeToggleDisabled = computed(() => {
 </script>
 
 <template>
-  <main class="relative min-h-screen" style="background-color: var(--bg-body)">
+  <main class="relative min-h-screen" style="background-color: var(--accent-primary)">
     <!-- Desktop header - Dark background -->
     <header
       class="sticky top-0 z-50 hidden h-20 items-center justify-between px-8 md:flex transition-colors duration-200"

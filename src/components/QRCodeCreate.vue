@@ -1197,7 +1197,8 @@ async function generateBatchQRCodes(format: 'png' | 'svg' | 'jpg') {
       v-if="isLarge"
       ref="mainContentContainer"
       id="main-content-container"
-      class="preview-panel sticky top-6 flex w-[420px] shrink-0 flex-col p-8"
+      class="preview-panel sticky top-6 flex w-[420px] shrink-0 flex-col p-8 overflow-y-auto"
+      style="height: calc(100vh - 48px); max-height: 1000px;"
     ></div>
     <!-- Bottom sheet on small screens -->
     <Drawer v-else>
@@ -1309,17 +1310,29 @@ async function generateBatchQRCodes(format: 'png' | 'svg' | 'jpg') {
       <div id="main-content">
         <div class="flex items-center justify-between mb-6">
           <h2 class="text-2xl font-extrabold" style="color: var(--text-main); letter-spacing: -1px;">{{ t('Preview') }}</h2>
-          <button
+          <button 
             id="load-qr-code-config-button"
-            class="btn btn-secondary flex items-center gap-2"
-            style="height: 36px; background: white; font-size: 13px;"
+            class="btn btn-secondary shrink-0 gap-2" 
+            style="height: 52px;"
             @click="loadQrConfigFromFile"
-            :aria-label="t('Load Configuration')"
+            :aria-label="t('Upload JSON Config')"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="17 8 12 3 7 8" />
+              <line x1="12" y1="3" x2="12" y2="15" />
             </svg>
-            {{ t('Load Config') }}
+            {{ t('Upload JSON Config') }}
           </button>
         </div>
         <div

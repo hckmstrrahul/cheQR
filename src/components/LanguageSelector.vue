@@ -19,11 +19,60 @@ const locales = computed(() =>
   }))
 )
 
+const getFontFamilyForLocale = (localeValue: string): string => {
+  const baseFallback = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
+  
+  // English locales use Google Sans
+  if (localeValue === 'en' || localeValue === 'enUS' || localeValue === 'enGB') {
+    return `'Google Sans', ${baseFallback}`
+  }
+  
+  // Chinese (Simplified)
+  if (localeValue === 'zhHANS') {
+    return `'Noto Sans SC', 'Noto Sans', ${baseFallback}`
+  }
+  
+  // Chinese (Traditional)
+  if (localeValue === 'zh') {
+    return `'Noto Sans TC', 'Noto Sans', ${baseFallback}`
+  }
+  
+  // Japanese
+  if (localeValue === 'ja') {
+    return `'Noto Sans JP', 'Noto Sans', ${baseFallback}`
+  }
+  
+  // Korean
+  if (localeValue === 'ko') {
+    return `'Noto Sans KR', 'Noto Sans', ${baseFallback}`
+  }
+  
+  // Arabic, Persian (Farsi)
+  if (localeValue === 'ar' || localeValue === 'fa') {
+    return `'Noto Sans Arabic', 'Noto Sans', ${baseFallback}`
+  }
+  
+  // Hindi, Marathi and other Devanagari script languages
+  if (localeValue === 'hi') {
+    return `'Noto Sans Devanagari', 'Noto Sans', ${baseFallback}`
+  }
+  
+  // Bengali
+  if (localeValue === 'bn') {
+    return `'Noto Sans Bengali', 'Noto Sans', ${baseFallback}`
+  }
+  
+  // Thai
+  if (localeValue === 'th') {
+    return `'Noto Sans Thai', 'Noto Sans', ${baseFallback}`
+  }
+  
+  // All other languages use Noto Sans
+  return `'Noto Sans', ${baseFallback}`
+}
+
 const updateFontFamily = (localeValue: string) => {
-  const isEnglish = localeValue === 'en' || localeValue === 'en-US' || localeValue === 'en-GB'
-  const fontFamily = isEnglish
-    ? "'Google Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
-    : "'Noto Sans', 'Google Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
+  const fontFamily = getFontFamilyForLocale(localeValue)
   document.documentElement.style.setProperty('--font-family', fontFamily)
   document.body.style.fontFamily = fontFamily
 }
@@ -44,29 +93,8 @@ onMounted(() => {
     return
   }
 
-  const browserLanguages = navigator.languages || [navigator.language]
-
-  for (const browserLang of browserLanguages) {
-    const langCode = browserLang.split('-')[0].toLowerCase()
-
-    if (sortedLocales.includes(browserLang)) {
-      locale.value = browserLang
-      updateFontFamily(browserLang)
-      return
-    }
-
-    const matchedLocale = sortedLocales.find(
-      (availableLocale) => availableLocale.toLowerCase() === langCode
-    )
-
-    if (matchedLocale) {
-      locale.value = matchedLocale
-      updateFontFamily(matchedLocale)
-      return
-    }
-  }
-
-  // Default to English font if no locale matched
+  // Default to English
+  locale.value = 'en'
   updateFontFamily('en')
 })
 </script>

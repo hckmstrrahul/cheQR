@@ -85,7 +85,10 @@ const isModeToggleDisabled = computed(() => {
           <path d="M42.6441 42.5417L298.69 42.5461L298.723 277.344L213.185 277.338L213.207 120.898L128.114 120.919C127.412 155.706 128.077 193.027 128.077 227.943L128.111 434.129L213.171 434.064L213.253 355.585C241.542 355.271 270.352 355.547 298.684 355.54C299.622 407.027 298.653 460.286 298.868 511.99L383.998 512.01L384.002 590.965L254.753 591.01C212.745 591.02 169.958 591.435 128.035 590.935L128.03 512.03L42.5951 512.015L42.6441 42.5417Z" fill="white"/>
           <path d="M384.007 906.555L469.402 906.53L469.368 985.875L384.003 985.955L384.007 906.555Z" fill="white"/>
         </svg>
-        <span class="text-xl font-bold tracking-tight text-white" style="letter-spacing: -0.04em">cheQR</span>
+        <div class="flex flex-col">
+          <span class="text-left text-xl font-bold tracking-tight text-white" style="letter-spacing: -0.04em">cheQR</span>
+          <span class="flex flex-col items-start justify-center text-[11px] text-left text-white/50" style="margin-top: -2px">Free stylized QR code generator</span>
+        </div>
       </a>
 
       <!-- Mode toggle - Segmented control -->

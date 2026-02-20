@@ -303,6 +303,36 @@ const recommendedErrorCorrectionLevel = computed<ErrorCorrectionLevel | null>(()
     return 'L'
   }
 })
+
+const errorCorrectionOptions = computed(() =>
+  errorCorrectionLevels.map((level) => ({
+    value: level,
+    label: `${t(ERROR_CORRECTION_LEVEL_LABELS[level])}${level === recommendedErrorCorrectionLevel.value ? ' ✓' : ''}`
+  }))
+)
+//#endregion
+
+//#region /* Dropdown options for QR code styling */
+const dotsTypeOptions = computed(() =>
+  ['dots', 'rounded', 'classy', 'classy-rounded', 'square', 'extra-rounded'].map((type) => ({
+    value: type,
+    label: t(type)
+  }))
+)
+
+const cornersSquareTypeOptions = computed(() =>
+  ['dot', 'square', 'extra-rounded'].map((type) => ({
+    value: type,
+    label: t(type)
+  }))
+)
+
+const cornersDotTypeOptions = computed(() =>
+  ['dot', 'square'].map((type) => ({
+    value: type,
+    label: t(type)
+  }))
+)
 //#endregion
 
 //#region /* Frame settings */ Start empty, default is set intelligently */
@@ -908,24 +938,25 @@ const updateDataFromModal = (newData: string) => {
 
 <template>
   <div
-    class="flex items-start justify-center gap-4 overflow-x-hidden md:flex-row md:gap-6 lg:gap-12 lg:pb-0"
+    class="create-page-layout flex items-start justify-center gap-6 overflow-x-hidden md:flex-row lg:pb-0"
   >
-    <!-- Sticky sidebar on large screens -->
+    <!-- Preview Panel (Left side on large screens) -->
     <div
       v-if="isLarge"
       ref="mainContentContainer"
       id="main-content-container"
-      class="sticky top-0 flex w-full shrink-0 flex-col items-center justify-center p-6 md:w-fit"
+      class="preview-panel sticky top-6 flex w-[420px] shrink-0 flex-col p-8"
     ></div>
     <!-- Bottom sheet on small screens -->
     <Drawer v-else>
       <DrawerTrigger
         id="drawer-preview-container"
-        class="fixed inset-x-0 bottom-0 z-10 rounded-t-2xl border-t border-solid border-gray-200/60 bg-white/90 shadow-2xl outline-none backdrop-blur-xl focus-visible:ring-2 focus-visible:ring-violet-500/40 dark:border-white/10 dark:bg-gray-900/90"
+        class="fixed inset-x-0 bottom-0 z-10 rounded-t-[32px] border-t outline-none backdrop-blur-xl focus-visible:ring-2 focus-visible:ring-black/20"
+        style="background: var(--bg-surface); border-color: var(--border-light); box-shadow: 0 -10px 40px rgba(0,0,0,0.1);"
       >
         <div class="flex flex-col items-center">
           <!-- Handle indicator for bottom sheet -->
-          <div class="mt-2 h-1 w-12 rounded-full bg-gray-300/60 dark:bg-gray-600/40"></div>
+          <div class="mt-3 h-1.5 w-12 rounded-full" style="background: var(--border-light);"></div>
           <div :class="['w-full', '-my-8']">
             <div class="flex origin-center scale-[0.7] items-center justify-center md:scale-100">
               <QRCodeFrame
@@ -986,7 +1017,8 @@ const updateDataFromModal = (newData: string) => {
             </div>
           </div>
           <div
-            class="flex items-center gap-1 py-2 text-center text-sm text-gray-600 dark:text-gray-400"
+            class="flex items-center gap-1 py-2 text-center text-sm font-medium"
+            style="color: var(--text-muted);"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -1012,9 +1044,9 @@ const updateDataFromModal = (newData: string) => {
       </DrawerTrigger>
       <DrawerContent>
         <DrawerHeader>
-          <DrawerTitle>{{ t('Export QR code') }}</DrawerTitle>
+          <DrawerTitle class="text-lg font-bold" style="color: var(--text-main); letter-spacing: -0.03em;">{{ t('Export QR code') }}</DrawerTitle>
         </DrawerHeader>
-        <div class="overflow-y-auto overflow-x-hidden px-4 pb-4">
+        <div class="overflow-y-auto overflow-x-hidden px-6 pb-6">
           <div ref="mainContentContainer" id="main-content-container" class="w-full"></div>
         </div>
       </DrawerContent>
@@ -1023,10 +1055,11 @@ const updateDataFromModal = (newData: string) => {
     <!-- Main content -->
     <Teleport to="#main-content-container" v-if="mainContentContainer != null">
       <div id="main-content">
+        <h2 class="mb-6 text-2xl font-extrabold" style="color: var(--text-main); letter-spacing: -1px;">{{ t('Preview') }}</h2>
         <div
           id="qr-code-container"
+          class="qr-stage mb-6"
           :class="[
-            'grid origin-center place-items-center',
             showFrame && ['left', 'right'].includes(frameTextPosition) && 'scale-[0.7] md:scale-100'
           ]"
         >
@@ -1086,275 +1119,144 @@ const updateDataFromModal = (newData: string) => {
             />
           </div>
         </div>
-        <div class="mt-4 flex flex-col items-center gap-8">
-          <div class="flex flex-col items-center justify-center gap-3">
+        <!-- Action buttons grid -->
+        <div class="grid grid-cols-2 gap-3 mb-4">
+          <button
+            v-if="exportMode !== ExportMode.Batch"
+            id="copy-qr-image-button"
+            class="btn btn-secondary flex items-center justify-center gap-2"
+            @click="copyQRToClipboard"
+            :disabled="isExportButtonDisabled"
+            :title="
+              isExportButtonDisabled
+                ? t('Please enter data to encode first')
+                : t('Copy')
+            "
+            :aria-label="t('Copy QR Code to clipboard')"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+            </svg>
+            {{ t('Copy') }}
+          </button>
+          <button
+            id="save-qr-code-config-button"
+            class="btn btn-secondary flex items-center justify-center gap-2"
+            @click="downloadQRConfig"
+            :title="t('Save JSON')"
+            :aria-label="t('Save QR Code configuration')"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+            </svg>
+            {{ t('Save JSON') }}
+          </button>
+        </div>
+        <button
+          id="load-qr-code-config-button"
+          class="btn btn-secondary w-full flex items-center justify-center gap-2 mb-6"
+          @click="loadQrConfigFromFile"
+          :aria-label="t('Load Configuration')"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+          </svg>
+          {{ t('Load Configuration') }}
+        </button>
+
+        <!-- Export Card -->
+        <div class="export-card">
+          <h3 class="text-lg font-semibold mb-4" style="color: var(--text-main);">{{ t('Export QR Code') }}</h3>
+          <div v-if="exportMode === ExportMode.Single" class="mb-4">
+            <label for="export-filename" class="input-label">{{ t('File name') }}</label>
+            <input
+              id="export-filename"
+              type="text"
+              class="text-input"
+              style="background: white;"
+              v-model="exportFilename"
+              placeholder="my-qr-code"
+            />
+          </div>
+          <div class="grid grid-cols-3 gap-3">
             <button
-              v-if="exportMode !== ExportMode.Batch"
-              id="copy-qr-image-button"
-              class="button flex w-fit max-w-full flex-row items-center gap-1"
-              @click="copyQRToClipboard"
+              id="download-qr-image-button-png"
+              class="btn btn-primary"
+              style="height: 40px;"
+              @click="() => downloadQRImage('png')"
               :disabled="isExportButtonDisabled"
               :title="
                 isExportButtonDisabled
                   ? t('Please enter data to encode first')
-                  : t('Copy QR Code to clipboard')
+                  : t('PNG')
               "
-              :aria-label="t('Copy QR Code to clipboard')"
+              :aria-label="t('Download QR Code as PNG')"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
-                <g
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                >
-                  <path d="M8 10a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-8a2 2 0 0 1-2-2z" />
-                  <path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2" />
-                </g>
-              </svg>
-              <p>{{ t('Copy QR Code to clipboard') }}</p>
+              PNG
             </button>
             <button
-              id="save-qr-code-config-button"
-              class="button flex w-fit max-w-full flex-row items-center gap-1"
-              @click="downloadQRConfig"
-              :title="t('Save QR Code configuration')"
-              :aria-label="t('Save QR Code configuration')"
+              id="download-qr-image-button-jpg"
+              class="btn btn-secondary"
+              style="height: 40px; background: white;"
+              @click="() => downloadQRImage('jpg')"
+              :disabled="isExportButtonDisabled"
+              :title="
+                isExportButtonDisabled
+                  ? t('Please enter data to encode first')
+                  : t('JPG')
+              "
+              :aria-label="t('Download QR Code as JPG')"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
-                <g
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                >
-                  <path d="M14 3v4a1 1 0 0 0 1 1h4" />
-                  <path
-                    d="M17 21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2zm-5-4v-6"
-                  />
-                  <path d="M9.5 13.5L12 11l2.5 2.5" />
-                </g>
-              </svg>
-              <p>{{ t('Save QR Code configuration') }}</p>
+              JPG
             </button>
             <button
-              id="load-qr-code-config-button"
-              class="button flex w-fit max-w-full flex-row items-center gap-1"
-              @click="loadQrConfigFromFile"
-              :aria-label="t('Load QR Code configuration')"
+              id="download-qr-image-button-svg"
+              class="btn btn-secondary"
+              style="height: 40px; background: white;"
+              @click="() => downloadQRImage('svg')"
+              :disabled="isExportButtonDisabled"
+              :title="
+                isExportButtonDisabled
+                  ? t('Please enter data to encode first')
+                  : t('SVG')
+              "
+              :aria-label="t('Download QR Code as SVG')"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
-                <g
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                >
-                  <path d="M14 3v4a1 1 0 0 0 1 1h4" />
-                  <path
-                    d="M17 21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2zm-5-10v6"
-                  />
-                  <path d="M9.5 13.5L12 11l2.5 2.5" />
-                </g>
-              </svg>
-              <p>{{ t('Load QR Code configuration') }}</p>
+              SVG
             </button>
           </div>
-          <section
-            id="export-options"
-            class="flex flex-col gap-4 rounded-2xl border border-gray-200/60 bg-white/40 p-5 backdrop-blur-sm dark:border-white/10 dark:bg-white/5"
-          >
-            <h2
-              class="mx-auto -mt-[34px] rounded-full bg-gradient-to-r from-violet-50 to-indigo-50 px-4 py-0.5 text-sm font-semibold text-violet-700 dark:from-violet-500/10 dark:to-indigo-500/10 dark:text-violet-300"
-            >
-              {{ t('Export QR code') }}
-            </h2>
-            <div class="grid place-items-center gap-4">
-              <div v-if="exportMode === ExportMode.Single" class="flex w-full flex-col gap-2">
-                <label for="export-filename" class="label">{{ t('File name') }}</label>
-                <input
-                  id="export-filename"
-                  type="text"
-                  class="text-input"
-                  v-model="exportFilename"
-                />
-              </div>
-              <div class="flex flex-row items-center justify-center gap-2">
-                <button
-                  id="download-qr-image-button-png"
-                  class="button"
-                  @click="() => downloadQRImage('png')"
-                  :disabled="isExportButtonDisabled"
-                  :title="
-                    isExportButtonDisabled
-                      ? t('Please enter data to encode first')
-                      : t('Download QR Code as PNG')
-                  "
-                  :aria-label="t('Download QR Code as PNG')"
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="24"
-                    height="24"
-                    viewBox="0 0 24 24"
-                  >
-                    <g fill="none" stroke="currentColor" stroke-width="2">
-                      <path d="M14 3v4a1 1 0 0 0 1 1h4" />
-                      <path d="M5 12V5a2 2 0 0 1 2-2h7l5 5v4" />
-                      <text
-                        x="1"
-                        y="22"
-                        fill="currentColor"
-                        stroke="none"
-                        font-size="11px"
-                        font-family="monospace"
-                        font-weight="600"
-                      >
-                        PNG
-                      </text>
-                    </g>
-                  </svg>
-                </button>
-                <button
-                  id="download-qr-image-button-jpg"
-                  class="button"
-                  @click="() => downloadQRImage('jpg')"
-                  :disabled="isExportButtonDisabled"
-                  :title="
-                    isExportButtonDisabled
-                      ? t('Please enter data to encode first')
-                      : t('Download QR Code as JPG')
-                  "
-                  :aria-label="t('Download QR Code as JPG')"
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="24"
-                    height="24"
-                    viewBox="0 0 24 24"
-                  >
-                    <g fill="none" stroke="currentColor" stroke-width="2">
-                      <path d="M14 3v4a1 1 0 0 0 1 1h4" />
-                      <path d="M5 12V5a2 2 0 0 1 2-2h7l5 5v4" />
-                      <text
-                        x="1"
-                        y="22"
-                        fill="currentColor"
-                        stroke="none"
-                        font-size="11px"
-                        font-family="monospace"
-                        font-weight="600"
-                      >
-                        JPG
-                      </text>
-                    </g>
-                  </svg>
-                </button>
-                <button
-                  id="download-qr-image-button-svg"
-                  class="button"
-                  @click="() => downloadQRImage('svg')"
-                  :disabled="isExportButtonDisabled"
-                  :title="
-                    isExportButtonDisabled
-                      ? t('Please enter data to encode first')
-                      : t('Download QR Code as SVG')
-                  "
-                  :aria-label="t('Download QR Code as SVG')"
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="24"
-                    height="24"
-                    viewBox="0 0 24 24"
-                  >
-                    <g fill="none" stroke="currentColor" stroke-width="2">
-                      <path d="M14 3v4a1 1 0 0 0 1 1h4" />
-                      <path d="M5 12V5a2 2 0 0 1 2-2h7l5 5v4" />
-                      <text
-                        x="1"
-                        y="22"
-                        fill="currentColor"
-                        stroke="none"
-                        font-size="11px"
-                        font-family="monospace"
-                        font-weight="600"
-                      >
-                        SVG
-                      </text>
-                    </g>
-                  </svg>
-                </button>
-              </div>
-            </div>
-          </section>
         </div>
       </div>
     </Teleport>
 
-    <section id="settings" class="flex w-full grow flex-col items-start gap-8 text-start">
+    <section id="settings" class="settings-panel flex w-full grow flex-col items-start gap-4 text-start p-8">
       <h2 class="sr-only">{{ t('Settings to customize your QR code') }}</h2>
       <Accordion
         type="multiple"
         collapsible
-        class="flex w-full flex-col gap-4"
+        class="flex w-full flex-col gap-3"
         :default-value="['qr-code-settings']"
       >
-        <AccordionItem value="frame-settings">
+        <AccordionItem value="frame-settings" class="accordion-item">
           <AccordionTrigger
-            class="button !rounded-2xl !px-5 text-xl font-semibold text-gray-700 outline-none dark:text-gray-100 md:!px-6 lg:!px-8"
+            class="accordion-header"
             ><span class="flex flex-row items-center gap-2"
-              ><span id="frame-settings-title">{{ t('Frame settings') }}</span>
-              <span
-                class="rounded-full bg-gradient-to-r from-violet-500 to-indigo-500 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white"
-              >
+              ><span id="frame-settings-title" class="text-lg font-semibold" style="color: var(--text-main);">{{ t('Frame settings') }}</span>
+              <span class="badge">
                 {{ t('New!') }}
               </span></span
             ></AccordionTrigger
           >
-          <AccordionContent class="px-2 pb-8 pt-4">
+          <AccordionContent class="accordion-content">
             <section class="w-full space-y-4" aria-labelledby="frame-settings-title">
-              <div class="flex flex-row items-center gap-2">
-                <label for="show-frame">{{ t('Add frame') }}</label>
+              <label class="checkbox-wrapper flex items-center gap-3 cursor-pointer" style="margin-bottom: var(--space-3);">
                 <input id="show-frame" type="checkbox" v-model="showFrame" />
-              </div>
+                <span class="text-base font-medium" style="color: var(--text-main);">{{ t('Add decorative frame') }}</span>
+              </label>
 
               <template v-if="showFrame">
-                <div class="flex flex-col sm:flex-row sm:items-center sm:gap-8">
-                  <div class="flex flex-col sm:w-1/2">
-                    <label>{{ t('Frame preset') }}</label>
-                    <Combobox
-                      :items="allFramePresetOptions"
-                      v-model:value="selectedFramePresetKey"
-                      :button-label="t('Select frame preset')"
-                    />
-                  </div>
-                </div>
-                <div class="flex flex-col">
-                  <label class="mb-2 block">{{ t('Text position') }}</label>
-                  <fieldset class="flex-1">
-                    <div
-                      class="radio"
-                      v-for="position in ['top', 'bottom', 'right', 'left']"
-                      :key="position"
-                    >
-                      <input
-                        :id="'frameTextPosition-' + position"
-                        type="radio"
-                        v-model="frameTextPosition"
-                        :value="position"
-                      />
-                      <label :for="'frameTextPosition-' + position">{{ t(position) }}</label>
-                    </div>
-                  </fieldset>
-                </div>
-                <div>
-                  <div class="mb-2 flex flex-row items-center gap-2">
-                    <label for="frame-text">{{ t('Frame text') }}</label>
-                  </div>
+                <div class="input-group">
+                  <label for="frame-text">{{ t('Frame Text') }}</label>
                   <textarea
                     name="frame-text"
                     class="text-input"
@@ -1364,90 +1266,37 @@ const updateDataFromModal = (newData: string) => {
                     v-model="frameText"
                   />
                 </div>
-                <div>
-                  <label class="mb-2 block">{{ t('Frame style') }}</label>
-                  <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                    <div>
-                      <label for="frame-text-color" class="mb-1 block text-sm">{{
-                        t('Text color')
-                      }}</label>
-                      <input
-                        id="frame-text-color"
-                        type="color"
-                        class="color-input"
-                        v-model="frameStyle.textColor"
-                      />
-                    </div>
-                    <div>
-                      <label for="frame-bg-color" class="mb-1 block text-sm">{{
-                        t('Background color')
-                      }}</label>
-                      <input
-                        id="frame-bg-color"
-                        type="color"
-                        class="color-input"
-                        v-model="frameStyle.backgroundColor"
-                      />
-                    </div>
-                    <div>
-                      <label for="frame-border-color" class="mb-1 block text-sm">{{
-                        t('Border color')
-                      }}</label>
-                      <input
-                        id="frame-border-color"
-                        type="color"
-                        class="color-input"
-                        v-model="frameStyle.borderColor"
-                      />
-                    </div>
-                    <div>
-                      <label for="frame-border-width" class="mb-1 block text-sm">{{
-                        t('Border width')
-                      }}</label>
-                      <input
-                        id="frame-border-width"
-                        type="text"
-                        class="text-input"
-                        v-model="frameStyle.borderWidth"
-                        placeholder="1px"
-                      />
-                    </div>
-                    <div>
-                      <label for="frame-border-radius" class="mb-1 block text-sm">{{
-                        t('Border radius')
-                      }}</label>
-                      <input
-                        id="frame-border-radius"
-                        type="text"
-                        class="text-input"
-                        v-model="frameStyle.borderRadius"
-                        placeholder="8px"
-                      />
-                    </div>
-                    <div>
-                      <label for="frame-padding" class="mb-1 block text-sm">{{
-                        t('Padding')
-                      }}</label>
-                      <input
-                        id="frame-padding"
-                        type="text"
-                        class="text-input"
-                        v-model="frameStyle.padding"
-                        placeholder="16px"
-                      />
-                    </div>
-                  </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                  <label class="color-picker-wrapper cursor-pointer" for="frame-text-color">
+                    <div class="color-swatch" :style="{ background: frameStyle.textColor, border: frameStyle.textColor === '#ffffff' ? '1px solid #ddd' : 'none' }"></div>
+                    <span class="text-sm font-semibold" style="color: var(--text-main);">{{ t('Text Color') }}</span>
+                    <input
+                      id="frame-text-color"
+                      type="color"
+                      v-model="frameStyle.textColor"
+                    />
+                  </label>
+                  <label class="color-picker-wrapper cursor-pointer" for="frame-bg-color">
+                    <div class="color-swatch" :style="{ background: frameStyle.backgroundColor }"></div>
+                    <span class="text-sm font-semibold" style="color: var(--text-main);">{{ t('Background') }}</span>
+                    <input
+                      id="frame-bg-color"
+                      type="color"
+                      v-model="frameStyle.backgroundColor"
+                    />
+                  </label>
                 </div>
               </template>
             </section>
           </AccordionContent>
         </AccordionItem>
-        <AccordionItem value="qr-code-settings">
+        <AccordionItem value="qr-code-settings" class="accordion-item">
           <AccordionTrigger
-            class="button !rounded-2xl !px-5 text-xl font-semibold text-gray-700 outline-none dark:text-gray-100 md:!px-6 lg:!px-8"
-            ><span id="qr-code-settings-title">{{ t('QR code settings') }}</span></AccordionTrigger
+            class="accordion-header"
+            ><span id="qr-code-settings-title" class="text-lg font-semibold" style="color: var(--text-main);">{{ t('QR code settings') }}</span></AccordionTrigger
           >
-          <AccordionContent class="px-2 pb-8 pt-4">
+          <AccordionContent class="accordion-content">
             <section class="w-full space-y-4" aria-labelledby="qr-code-settings-title">
               <div>
                 <label>{{ t('Preset') }}</label>
@@ -1482,37 +1331,23 @@ const updateDataFromModal = (newData: string) => {
                 <div class="flex w-full flex-col flex-wrap gap-4 sm:flex-row sm:gap-x-8">
                   <!-- Data to encode area -->
                   <div class="w-full sm:grow">
-                    <!-- Header row: Label + Mode Toggles + Batch Options -->
-                    <div class="mb-2 flex items-center gap-4">
-                      <label for="data">{{ t('Data to encode') }}</label>
-                      <!-- Mode Toggle Buttons -->
-                      <div class="flex grow items-center gap-2">
+                    <!-- Header row: Label + Mode Toggles -->
+                    <div class="mb-4">
+                      <label for="data" class="mb-3 block">{{ t('Data to encode') }}</label>
+                      <!-- Mode Toggle - Segmented Control -->
+                      <div class="segmented-control mb-4" style="width: fit-content;">
                         <button
-                          :class="[
-                            'secondary-button',
-                            { 'opacity-50': exportMode === ExportMode.Single } // Dim if active
-                          ]"
+                          :class="['segmented-btn', exportMode === ExportMode.Single ? 'active' : '']"
                           @click="exportMode = ExportMode.Single"
                         >
-                          {{ $t('Single export') }}
+                          {{ $t('Single') }}
                         </button>
                         <button
-                          :class="[
-                            'secondary-button',
-                            { 'opacity-50': exportMode === ExportMode.Batch } // Dim if active
-                          ]"
+                          :class="['segmented-btn', exportMode === ExportMode.Batch ? 'active' : '']"
                           @click="exportMode = ExportMode.Batch"
                         >
-                          {{ $t('Batch export') }}
+                          {{ $t('Batch') }}
                         </button>
-                        <!-- Batch specific options -->
-                        <div
-                          v-if="exportMode === ExportMode.Batch"
-                          :class="[
-                            'flex grow items-center justify-end gap-2',
-                            dataStringsFromCsv.length > 0 && 'opacity-80'
-                          ]"
-                        ></div>
                       </div>
                     </div>
                     <!-- Single Mode Input -->
@@ -1520,33 +1355,19 @@ const updateDataFromModal = (newData: string) => {
                       <textarea
                         id="data"
                         v-model="data"
-                        class="me-2 grow text-input"
-                        :placeholder="t('data to encode e.g. a URL or a string')"
+                        class="w-full text-input"
+                        rows="3"
+                        :placeholder="t('https://example.com')"
                       ></textarea>
                       <button
                         @click="openDataModal"
                         aria-haspopup="dialog"
                         :aria-expanded="isDataModalVisible"
-                        class="secondary-button mt-2 flex items-center gap-1 self-end"
+                        class="btn btn-secondary mt-3"
+                        style="height: 36px; font-size: 13px; background: white; border: 1px solid var(--border-light);"
                         :aria-label="t('Open data type generator')"
                       >
-                        <span>{{ t('Data templates') }}</span>
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          width="16"
-                          height="16"
-                          viewBox="0 0 24 24"
-                        >
-                          <!-- Icon from Tabler Icons by Paweł Kuna - https://github.com/tabler/tabler-icons/blob/master/LICENSE -->
-                          <path
-                            fill="none"
-                            stroke="#888888"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            stroke-width="2"
-                            d="m7 7l5 5l-5 5m6-10l5 5l-5 5"
-                          />
-                        </svg>
+                        {{ t('Open Data Templates') }}
                       </button>
                     </div>
                     <template v-if="exportMode === ExportMode.Batch">
@@ -1681,42 +1502,40 @@ const updateDataFromModal = (newData: string) => {
                 </div>
               </div>
               <div class="w-full">
-                <div class="mb-2 flex flex-row items-center gap-2">
-                  <label for="image-url">
-                    {{ t('Logo image URL') }}
-                  </label>
-                  <button class="icon-button flex flex-row items-center" @click="uploadImage">
+                <label for="image-url" class="mb-2 block">{{ t('Logo image') }}</label>
+                <div class="flex gap-2">
+                  <input
+                    name="image-url"
+                    class="text-input flex-1"
+                    id="image-url"
+                    type="text"
+                    :placeholder="t('Paste image URL or upload')"
+                    v-model="image"
+                  />
+                  <button 
+                    class="btn btn-secondary shrink-0 gap-2" 
+                    style="height: 52px;"
+                    @click="uploadImage"
+                    :aria-label="t('Upload image')"
+                  >
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
-                      width="24"
-                      height="24"
+                      width="20"
+                      height="20"
                       viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
                     >
-                      <g
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                      >
-                        <path d="M14 3v4a1 1 0 0 0 1 1h4" />
-                        <path
-                          d="M17 21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2zm-5-10v6"
-                        />
-                        <path d="M9.5 13.5L12 11l2.5 2.5" />
-                      </g>
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                      <polyline points="17 8 12 3 7 8" />
+                      <line x1="12" y1="3" x2="12" y2="15" />
                     </svg>
-                    <span>{{ t('Upload image') }}</span>
+                    {{ t('Upload') }}
                   </button>
                 </div>
-                <textarea
-                  name="image-url"
-                  class="text-input"
-                  id="image-url"
-                  rows="1"
-                  :placeholder="t('Logo image URL')"
-                  v-model="image"
-                />
               </div>
               <div class="flex flex-row items-center gap-2">
                 <label for="with-background">
@@ -1724,81 +1543,70 @@ const updateDataFromModal = (newData: string) => {
                 </label>
                 <input id="with-background" type="checkbox" v-model="includeBackground" />
               </div>
-              <div id="color-settings" :class="'flex w-full flex-row flex-wrap gap-4'">
-                <div
-                  :inert="!includeBackground"
-                  :class="[!includeBackground && 'opacity-30', 'flex flex-row items-center gap-2']"
-                >
-                  <label for="background-color">{{ t('Background color') }}</label>
-                  <input
-                    id="background-color"
-                    type="color"
-                    class="color-input"
-                    v-model="styleBackground"
-                  />
-                </div>
-                <div class="flex flex-row items-center gap-2">
-                  <label for="dots-color">{{ t('Dots color') }}</label>
-                  <input
-                    id="dots-color"
-                    type="color"
-                    class="color-input"
-                    v-model="dotsOptionsColor"
-                  />
-                </div>
-                <div class="flex flex-row items-center gap-2">
-                  <label for="corners-square-color">{{ t('Corners Square color') }}</label>
-                  <input
-                    id="corners-square-color"
-                    type="color"
-                    class="color-input"
-                    v-model="cornersSquareOptionsColor"
-                  />
-                </div>
-                <div class="flex flex-row items-center gap-2">
-                  <label for="corners-dot-color">{{ t('Corners Dot color') }}</label>
-                  <input
-                    id="corners-dot-color"
-                    type="color"
-                    class="color-input"
-                    v-model="cornersDotOptionsColor"
-                  />
+              <div>
+                <label class="mb-3 block">{{ t('Colors') }}</label>
+                <div id="color-settings" class="flex flex-wrap gap-3">
+                  <label
+                    :inert="!includeBackground"
+                    :class="[!includeBackground && 'opacity-30', 'color-picker-wrapper cursor-pointer']"
+                    for="background-color"
+                  >
+                    <div class="color-swatch" :style="{ background: styleBackground, border: styleBackground === '#ffffff' ? '1px solid #ddd' : 'none' }"></div>
+                    <span class="text-sm font-semibold" style="color: var(--text-main);">{{ t('Bg') }}</span>
+                    <input
+                      id="background-color"
+                      type="color"
+                      v-model="styleBackground"
+                    />
+                  </label>
+                  <label class="color-picker-wrapper cursor-pointer" for="dots-color">
+                    <div class="color-swatch" :style="{ background: dotsOptionsColor }"></div>
+                    <span class="text-sm font-semibold" style="color: var(--text-main);">{{ t('Dots') }}</span>
+                    <input
+                      id="dots-color"
+                      type="color"
+                      v-model="dotsOptionsColor"
+                    />
+                  </label>
+                  <label class="color-picker-wrapper cursor-pointer" for="corners-square-color">
+                    <div class="color-swatch" :style="{ background: cornersSquareOptionsColor }"></div>
+                    <span class="text-sm font-semibold" style="color: var(--text-main);">{{ t('Corners') }}</span>
+                    <input
+                      id="corners-square-color"
+                      type="color"
+                      v-model="cornersSquareOptionsColor"
+                    />
+                  </label>
                 </div>
               </div>
-              <div class="flex w-full flex-col gap-4 sm:flex-row sm:gap-8">
-                <div class="w-full sm:w-1/3">
-                  <label for="width">
-                    {{ t('Width (px)') }}
-                  </label>
+              <div class="grid grid-cols-3 gap-4">
+                <div class="input-group">
+                  <label for="width">{{ t('Width') }}</label>
                   <input
                     class="text-input"
                     id="width"
                     type="number"
-                    placeholder="width in pixels"
+                    placeholder="1080"
                     v-model="width"
                   />
                 </div>
-                <div class="w-full sm:w-1/3">
-                  <label for="height">
-                    {{ t('Height (px)') }}
-                  </label>
+                <div class="input-group">
+                  <label for="height">{{ t('Height') }}</label>
                   <input
                     class="text-input"
                     id="height"
                     type="number"
-                    placeholder="height in pixels"
+                    placeholder="1080"
                     v-model="height"
                   />
                 </div>
-                <div class="w-full sm:w-1/3">
-                  <label for="border-radius">
-                    {{ t('Border radius (px)') }}
-                  </label>
+                <div class="input-group">
+                  <label for="border-radius">{{ t('Radius') }}</label>
                   <input
                     class="text-input"
                     id="border-radius"
                     type="number"
-                    placeholder="24"
+                    placeholder="16"
                     v-model="styleBorderRadius"
                   />
                 </div>
@@ -1831,101 +1639,61 @@ const updateDataFromModal = (newData: string) => {
               </div>
               <div
                 id="dots-squares-settings"
-                class="mb-4 flex w-full flex-col flex-wrap gap-6 md:flex-row"
+                class="grid grid-cols-2 gap-4"
               >
-                <fieldset class="flex-1">
-                  <legend>{{ t('Dots type') }}</legend>
-                  <div
-                    class="radio"
-                    v-for="type in [
-                      'dots',
-                      'rounded',
-                      'classy',
-                      'classy-rounded',
-                      'square',
-                      'extra-rounded'
-                    ]"
-                    :key="type"
-                  >
-                    <input
-                      :id="'dotsOptionsType-' + type"
-                      type="radio"
-                      v-model="dotsOptionsType"
-                      :value="type"
-                    />
-                    <label :for="'dotsOptionsType-' + type">{{ t(type) }}</label>
-                  </div>
-                </fieldset>
-                <fieldset class="flex-1">
-                  <legend>{{ t('Corners Square type') }}</legend>
-                  <div class="radio" v-for="type in ['dot', 'square', 'extra-rounded']" :key="type">
-                    <input
-                      :id="'cornersSquareOptionsType-' + type"
-                      type="radio"
-                      v-model="cornersSquareOptionsType"
-                      :value="type"
-                    />
-                    <label :for="'cornersSquareOptionsType-' + type">{{ t(type) }}</label>
-                  </div>
-                </fieldset>
-                <fieldset class="flex-1">
-                  <legend>{{ t('Corners Dot type') }}</legend>
-                  <div class="radio" v-for="type in ['dot', 'square']" :key="type">
-                    <input
-                      :id="'cornersDotOptionsType-' + type"
-                      type="radio"
-                      v-model="cornersDotOptionsType"
-                      :value="type"
-                    />
-                    <label :for="'cornersDotOptionsType-' + type">{{ t(type) }}</label>
-                  </div>
-                </fieldset>
-                <fieldset class="flex-1">
-                  <div class="flex flex-row items-center gap-2">
-                    <legend>{{ t('Error correction level') }}</legend>
+                <div class="input-group">
+                  <label for="dots-type">{{ t('Dots type') }}</label>
+                  <Combobox
+                    :items="dotsTypeOptions"
+                    v-model:value="dotsOptionsType"
+                    :button-label="t('Select dots type')"
+                  />
+                </div>
+                <div class="input-group">
+                  <label for="corners-square-type">{{ t('Corners Square') }}</label>
+                  <Combobox
+                    :items="cornersSquareTypeOptions"
+                    v-model:value="cornersSquareOptionsType"
+                    :button-label="t('Select corners square type')"
+                  />
+                </div>
+                <div class="input-group">
+                  <label for="corners-dot-type">{{ t('Corners Dot') }}</label>
+                  <Combobox
+                    :items="cornersDotTypeOptions"
+                    v-model:value="cornersDotOptionsType"
+                    :button-label="t('Select corners dot type')"
+                  />
+                </div>
+                <div class="input-group">
+                  <div class="flex items-center gap-2 mb-2">
+                    <label for="error-correction" class="!mb-0">{{ t('Error Correction') }}</label>
                     <a
                       href="https://docs.uniqode.com/en/articles/7219782-what-is-the-recommended-error-correction-level-for-printing-a-qr-code"
                       target="_blank"
-                      class="icon-button flex flex-row items-center"
+                      class="inline-flex items-center justify-center w-5 h-5 rounded-full"
+                      style="background: var(--bg-input);"
                       :aria-label="t('What is error correction level?')"
                     >
                       <svg
-                        class="me-1"
                         xmlns="http://www.w3.org/2000/svg"
-                        width="16"
-                        height="16"
+                        width="14"
+                        height="14"
                         viewBox="0 0 24 24"
                       >
                         <path
-                          fill="#888888"
+                          fill="var(--text-muted)"
                           d="M11.95 18q.525 0 .888-.363t.362-.887t-.362-.888t-.888-.362t-.887.363t-.363.887t.363.888t.887.362m.05 4q-2.075 0-3.9-.788t-3.175-2.137T2.788 15.9T2 12t.788-3.9t2.137-3.175T8.1 2.788T12 2t3.9.788t3.175 2.137T21.213 8.1T22 12t-.788 3.9t-2.137 3.175t-3.175 2.138T12 22m0-2q3.35 0 5.675-2.325T20 12t-2.325-5.675T12 4T6.325 6.325T4 12t2.325 5.675T12 20m.1-12.3q.625 0 1.088.4t.462 1q0 .55-.337.975t-.763.8q-.575.5-1.012 1.1t-.438 1.35q0 .35.263.588t.612.237q.375 0 .638-.25t.337-.625q.1-.525.45-.937t.75-.788q.575-.55.988-1.2t.412-1.45q0-1.275-1.037-2.087T12.1 6q-.95 0-1.812.4T8.975 7.625q-.175.3-.112.638t.337.512q.35.2.725.125t.625-.425q.275-.375.688-.575t.862-.2"
                         />
                       </svg>
                     </a>
                   </div>
-                  <div v-for="level in errorCorrectionLevels" class="radio" :key="level">
-                    <input
-                      :id="'errorCorrectionLevel-' + level"
-                      type="radio"
-                      v-model="errorCorrectionLevel"
-                      :value="level"
-                      :aria-describedby="
-                        level === recommendedErrorCorrectionLevel ? 'recommended-text' : undefined
-                      "
-                    />
-                    <div class="flex items-center gap-2">
-                      <label :for="'errorCorrectionLevel-' + level">{{
-                        t(ERROR_CORRECTION_LEVEL_LABELS[level])
-                      }}</label>
-                      <span
-                        v-if="level === recommendedErrorCorrectionLevel"
-                        class="inline-flex items-center rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-800 dark:bg-zinc-700 dark:text-zinc-200"
-                      >
-                        {{ t('Suggested') }}
-                      </span>
-                    </div>
-                  </div>
-                </fieldset>
+                  <Combobox
+                    :items="errorCorrectionOptions"
+                    v-model:value="errorCorrectionLevel"
+                    :button-label="t('Select error correction level')"
+                  />
+                </div>
               </div>
             </section>
           </AccordionContent>

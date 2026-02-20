@@ -4,6 +4,10 @@ import { computed, ref, onMounted, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { sortedLocales } from '@/utils/language'
 
+defineProps<{
+  darkHeader?: boolean
+}>()
+
 const STORAGE_KEY = 'preferred-language'
 
 const isLocaleSelectOpen = ref(false)
@@ -15,7 +19,6 @@ const locales = computed(() =>
   }))
 )
 
-// Save language preference to localStorage whenever it changes
 watch(locale, (newLocale) => {
   if (newLocale) {
     localStorage.setItem(STORAGE_KEY, newLocale)
@@ -30,20 +33,16 @@ onMounted(() => {
     return
   }
 
-  // If no saved preference, try to detect from browser
   const browserLanguages = navigator.languages || [navigator.language]
 
   for (const browserLang of browserLanguages) {
-    // Extract the language code (e.g., 'en-US' -> 'en')
     const langCode = browserLang.split('-')[0].toLowerCase()
 
-    // Check for exact match
     if (sortedLocales.includes(browserLang)) {
       locale.value = browserLang
       return
     }
 
-    // Check for language code match
     const matchedLocale = sortedLocales.find(
       (availableLocale) => availableLocale.toLowerCase() === langCode
     )
@@ -53,8 +52,6 @@ onMounted(() => {
       return
     }
   }
-
-  // If no match found, keep the default locale (usually 'en')
 })
 </script>
 
@@ -64,18 +61,19 @@ onMounted(() => {
     v-model:value="locale"
     v-model:open="isLocaleSelectOpen"
     :button-label="t('Select language')"
+    :dark-header="darkHeader"
   >
     <template #button-icon>
       <svg
         xmlns="http://www.w3.org/2000/svg"
-        class="icon -ms-1.5 size-6 shrink-0"
-        width="36"
-        height="36"
+        class="icon -ms-1.5 size-5 shrink-0"
+        width="20"
+        height="20"
         viewBox="0 0 24 24"
       >
         <g
           fill="none"
-          stroke="#abcbca"
+          :stroke="darkHeader ? 'rgba(255,255,255,0.7)' : 'currentColor'"
           stroke-linecap="round"
           stroke-linejoin="round"
           stroke-width="2"

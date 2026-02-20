@@ -106,13 +106,13 @@ onUnmounted(() => {
     <!-- Hamburger menu button -->
     <button
       ref="reference"
-      class="flex size-9 items-center justify-center rounded-xl border border-gray-200/60 bg-white/60 text-gray-700 outline-none backdrop-blur-xl hover:bg-white/80 focus-visible:ring-2 focus-visible:ring-violet-500/40 dark:border-white/10 dark:bg-white/5 dark:text-gray-200 dark:hover:bg-white/10"
+      class="flex size-9 items-center justify-center rounded-full text-zinc-400 outline-none transition-colors hover:bg-white/10 hover:text-white"
       @click="toggleMenu"
       :aria-label="t('Menu')"
       aria-haspopup="true"
       :aria-expanded="isOpen"
     >
-      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24">
         <path fill="currentColor" d="M3 18h18v-2H3zm0-5h18v-2H3zm0-5h18V6H3z" />
       </svg>
     </button>
@@ -122,12 +122,12 @@ onUnmounted(() => {
       v-if="isOpen"
       ref="floating"
       :style="floatingStyles"
-      class="relative z-50 w-64 rounded-2xl border border-gray-200/60 bg-white/90 p-4 shadow-xl backdrop-blur-xl dark:border-white/10 dark:bg-gray-900/90"
+      class="relative z-50 w-64 rounded-2xl border border-zinc-200 bg-white p-4 shadow-xl dark:border-zinc-800 dark:bg-zinc-900"
     >
       <Dialog>
         <DialogTrigger as-child>
           <button
-            class="secondary-button absolute end-4 top-4"
+            class="absolute end-4 top-4 rounded-full bg-yellow-400 px-2.5 py-0.5 text-xs font-bold text-black"
             :aria-label="t('View changelog')"
             :disabled="isLoadingChangelog"
           >
@@ -163,14 +163,20 @@ onUnmounted(() => {
       </Dialog>
       <div class="flex flex-col gap-4">
         <!-- App title -->
-        <div class="flex items-center">
-          <h1 class="text-xl font-bold" style="font-family: 'Space Grotesk', sans-serif"><span class="gradient-text">cheQR</span></h1>
+        <div class="flex items-center gap-2">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="2" y="2" width="9" height="9" rx="3" stroke="currentColor" stroke-width="2.5" />
+            <rect x="13" y="2" width="9" height="9" rx="3" stroke="currentColor" stroke-width="2.5" />
+            <rect x="2" y="13" width="9" height="9" rx="3" stroke="currentColor" stroke-width="2.5" />
+            <path d="M16 16H20V20" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" />
+          </svg>
+          <h1 class="text-xl font-bold tracking-tight">cheQR</h1>
         </div>
 
         <!-- GitHub link -->
         <a
-          class="flex items-center gap-2 rounded-xl px-2 py-1.5 text-gray-700 no-underline hover:bg-violet-50 dark:text-gray-200 dark:hover:bg-violet-500/10"
-          href="https://github.com/lyqht/mini-qr"
+          class="flex items-center gap-2 rounded-xl px-2 py-1.5 text-zinc-700 no-underline transition-colors hover:bg-zinc-100 dark:text-zinc-200 dark:hover:bg-zinc-800"
+          href="https://github.com/hckmstrrahul/cheQR"
           target="_blank"
           :aria-label="t('GitHub repository for this project')"
         >
@@ -185,7 +191,7 @@ onUnmounted(() => {
 
         <!-- Dark mode toggle -->
         <button
-          class="flex items-center gap-2 rounded-xl px-2 py-1.5 text-gray-700 hover:bg-violet-50 dark:text-gray-200 dark:hover:bg-violet-500/10"
+          class="flex items-center gap-2 rounded-xl px-2 py-1.5 text-zinc-700 transition-colors hover:bg-zinc-100 dark:text-zinc-200 dark:hover:bg-zinc-800"
           @click="emit('toggle-dark-mode')"
           :aria-label="t('Toggle dark mode')"
         >
@@ -252,22 +258,21 @@ onUnmounted(() => {
         >
           <div class="flex items-center justify-between gap-1">
             <span class="text-start">
-              {{ t('Created by') }}
-              <br />
+              {{ t('Based on') }}
+              <a
+                href="https://github.com/lyqht/mini-qr"
+                target="_blank"
+                class="text-zinc-900 hover:text-zinc-700 dark:text-zinc-100 dark:hover:text-zinc-300"
+                >Mini QR</a
+              >
+              {{ t('by') }}
               <a
                 href="https://github.com/lyqht"
                 target="_blank"
                 class="text-zinc-900 hover:text-zinc-700 dark:text-zinc-100 dark:hover:text-zinc-300"
-                >Estee Tey 🐧🌻</a
+                >Estee Tey</a
               >
             </span>
-            <a
-              href="https://blog.esteetey.dev/sponsor"
-              target="_blank"
-              class="secondary-button"
-              :aria-label="t('Sponsor')"
-              >{{ t('Sponsor') }}</a
-            >
           </div>
         </div>
       </div>

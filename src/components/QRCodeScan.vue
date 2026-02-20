@@ -312,83 +312,94 @@ defineExpose({
 </script>
 
 <template>
-  <div class="relative mx-auto w-full max-w-[500px]">
-    <div v-if="capturedData" class="capture-result">
-      <p class="mb-4 text-xl font-semibold">{{ t('QR Code Content') }}</p>
+  <div class="relative mx-auto w-full max-w-[600px]">
+    <!-- Success Result Card -->
+    <div v-if="capturedData" class="surface-card p-8 text-center" style="border-radius: var(--radius-lg)">
+      <!-- Success Icon -->
+      <div
+        class="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full"
+        style="background: var(--bg-input)"
+      >
+        <svg width="32" height="32" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path d="M5 13l4 4L19 7" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+      </div>
+
+      <h2 class="mb-2 text-2xl font-semibold">{{ t('Successfully Scanned') }}</h2>
+      <p class="mb-6 text-sm" style="color: var(--text-muted)">{{ t('Extracted content from the QR code') }}</p>
 
       <!-- QR Code Type Badge -->
       <div class="mb-4 flex items-center justify-center">
         <span
-          class="inline-flex items-center gap-1 rounded-full bg-gray-100 px-3 py-1 text-sm dark:bg-gray-800"
+          class="inline-flex items-center gap-1 rounded-full px-3 py-1 text-sm"
+          style="background: var(--bg-input)"
           v-html="qrCodeTypeIcon + ' ' + typeLabel"
         ></span>
       </div>
 
-      <!-- QR Code Content -->
-      <component
-        :is="isActionable ? 'a' : 'span'"
-        :href="isActionable ? formattedData : undefined"
-        :target="qrCodeType === 'url' ? '_blank' : undefined"
-        class="flex w-full flex-row items-center justify-center gap-1 text-center"
+      <!-- Data Display -->
+      <div
+        class="mb-8 break-all rounded-xl p-4 text-left font-mono text-sm"
+        style="background: var(--bg-input)"
       >
-        {{ capturedData }}
-      </component>
+        <component
+          :is="isActionable ? 'a' : 'span'"
+          :href="isActionable ? formattedData : undefined"
+          :target="qrCodeType === 'url' ? '_blank' : undefined"
+          class="block"
+        >
+          {{ capturedData }}
+        </component>
+      </div>
 
-      <div class="mt-8 flex flex-col items-center justify-center gap-4 md:mt-16">
-        <!-- Copy Button -->
+      <!-- Action Buttons -->
+      <div class="mx-auto grid max-w-md grid-cols-2 gap-3">
         <button
-          class="button flex w-full flex-row items-center justify-start gap-4"
-          @click="copyToClipboard"
+          v-if="isActionable"
+          class="btn btn-primary col-span-2"
+          @click="window.open(formattedData, '_blank')"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
-            <g
-              fill="none"
-              stroke="currentColor"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-            >
-              <path d="M8 10a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-8a2 2 0 0 1-2-2z" />
-              <path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2" />
-            </g>
+          <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
           </svg>
-          <span>{{ t('Copy to clipboard') }}</span>
+          {{ qrCodeType === 'url' ? t('Open URL') : t('Open') }}
         </button>
-        <button
-          class="button flex w-full flex-row items-center justify-start gap-4"
-          @click="resetCapture"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24">
-            <path
-              fill="currentColor"
-              d="M12 16q1.875 0 3.188-1.313T16.5 11.5q0-1.875-1.313-3.188T12 7q-1.875 0-3.188 1.313T7.5 11.5q0 1.875 1.313 3.188T12 16m0-1.8q-1.125 0-1.913-.788T9.3 11.5q0-1.125.788-1.913T12 8.8q1.125 0 1.913.788T14.7 11.5q0 1.125-.788 1.913T12 14.2M12 22q-2.075 0-3.9-.788t-3.175-2.137q-1.35-1.35-2.137-3.175T2 12q0-2.075.788-3.9t2.137-3.175q1.35-1.35 3.175-2.137T12 2q2.075 0 3.9.788t3.175 2.137q1.35 1.35 2.138 3.175T22 12q0 2.075-.788 3.9t-2.137 3.175q-1.35 1.35-3.175 2.138T12 22m0-2q3.35 0 5.675-2.325T20 12q0-3.35-2.325-5.675T12 4Q8.65 4 6.325 6.325T4 12q0 3.35 2.325 5.675T12 20m0-8"
-            />
+        <button class="btn btn-secondary" @click="copyToClipboard">
+          <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2" stroke-width="2" stroke-linecap="round" />
           </svg>
-          <span>{{ t('Scan Another') }}</span>
+          {{ t('Copy') }}
         </button>
-        <button
-          class="button flex w-full flex-row items-center justify-start gap-4"
-          @click="$emit('create-qr', capturedData)"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24">
-            <path
-              fill="currentColor"
-              d="M3 11h8V3H3zm2-6h4v4H5zM3 21h8v-8H3zm2-6h4v4H5zM13 3v8h8V3zm6 6h-4V5h4zM13 13h2v2h-2zm0 4h2v2h-2zm4-4h2v2h-2zm0 4h2v2h-2z"
-            />
+        <button class="btn btn-secondary" @click="$emit('create-qr', capturedData)">
+          <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path d="M3 11h8V3H3zm2-6h4v4H5zM3 21h8v-8H3zm2-6h4v4H5zm8-12v8h8V3zm6 6h-4V5h4z" fill="currentColor" stroke="none" />
           </svg>
-          <span>{{ t('Create QR Code with this data') }}</span>
+          {{ t('Create QR') }}
         </button>
       </div>
+
+      <!-- Scan Another -->
+      <button
+        class="mt-8 text-sm transition-colors hover:opacity-70"
+        style="color: var(--text-muted)"
+        @click="resetCapture"
+      >
+        {{ t('Scan Another Code') }}
+      </button>
     </div>
 
+    <!-- Camera Scanner -->
     <div v-else-if="showCameraScanner" class="mb-4 w-full">
       <QRCodeCameraScanner @qr-detected="onQRDetected" @cancel="onCameraScannerCancel" />
     </div>
 
+    <!-- Initial Scan Controls -->
     <div v-else class="capture-controls">
+      <!-- Loading State -->
       <div v-if="isLoading" class="mb-4 flex flex-col items-center justify-center">
         <div
-          class="mb-2 size-10 animate-spin rounded-full border-4 border-solid border-gray-100 border-t-blue-500 dark:border-gray-800 dark:border-t-blue-500"
+          class="mb-2 size-10 animate-spin rounded-full border-4 border-solid"
+          style="border-color: var(--border-light); border-top-color: var(--accent-primary)"
         ></div>
         <p>{{ t('Processing...') }}</p>
       </div>
@@ -397,17 +408,16 @@ defineExpose({
       <div id="file-qr-reader" class="hidden"></div>
 
       <div class="flex flex-col items-center gap-4" v-if="!isLoading">
-        <!-- Upload QR Code Image option -->
-        <div class="mb-4 text-center">
-          <h3 class="mb-4 text-lg font-medium">{{ t('Scan a QR Code') }}</h3>
+        <div class="surface-card w-full p-8 text-center" style="border-radius: var(--radius-lg)">
+          <h3 class="mb-6 text-xl font-semibold">{{ t('Scan a QR Code') }}</h3>
 
+          <!-- Upload Area -->
           <button
             :class="[
-              'outline-none focus-visible:ring-1 focus-visible:ring-zinc-700 dark:focus-visible:ring-zinc-200',
-              'flex w-full cursor-pointer items-center justify-center rounded-lg border-2 border-dashed p-4 py-6 text-center transition-colors',
+              'flex w-full cursor-pointer items-center justify-center rounded-2xl border-2 border-dashed p-8 text-center transition-all',
               isDraggingOver
-                ? 'border-blue-400 bg-blue-50 dark:border-blue-600 dark:bg-blue-900/20'
-                : 'border-gray-300 hover:border-gray-400 hover:bg-gray-50 dark:hover:bg-zinc-800'
+                ? 'border-black bg-zinc-100 dark:border-white dark:bg-zinc-800'
+                : 'border-zinc-300 hover:border-zinc-400 hover:bg-zinc-50 dark:border-zinc-700 dark:hover:border-zinc-600 dark:hover:bg-zinc-800/50'
             ]"
             @click="fileInput?.click()"
             @keyup.enter="fileInput?.click()"
@@ -416,15 +426,15 @@ defineExpose({
             @dragleave="handleDragLeave"
             @drop="handleDrop"
           >
-            <div class="flex flex-col items-center gap-2">
-              <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24">
+            <div class="flex flex-col items-center gap-3">
+              <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" style="color: var(--text-muted)">
                 <path
                   fill="currentColor"
-                  d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8zm4 18H6V4h7v5h5z"
+                  d="M11 16V7.85l-2.6 2.6L7 9l5-5l5 5l-1.4 1.45l-2.6-2.6V16h-2Zm-5 4q-.825 0-1.413-.588T4 18v-3h2v3h12v-3h2v3q0 .825-.588 1.413T18 20H6Z"
                 />
               </svg>
-              <p>{{ t('Upload QR Code Image') }}</p>
-              <p class="text-sm text-gray-500">{{ t('or drag and drop an image here') }}</p>
+              <p class="font-medium">{{ t('Upload QR Code Image') }}</p>
+              <p class="text-sm" style="color: var(--text-muted)">{{ t('or drag and drop an image here') }}</p>
             </div>
           </button>
           <input
@@ -441,17 +451,17 @@ defineExpose({
           </p>
 
           <!-- Helpful tip -->
-          <p class="mt-2 text-sm text-gray-500">
+          <p class="mt-3 text-sm" style="color: var(--text-muted)">
             {{ t('Tip: For best results, use a clear image with good lighting.') }}
           </p>
 
-          <div class="mt-4 flex flex-col items-center gap-2">
-            <p class="mb-2">{{ t('or') }}</p>
+          <div class="mt-6 flex flex-col items-center gap-3">
+            <p class="text-sm" style="color: var(--text-muted)">{{ t('or') }}</p>
 
-            <div class="flex items-center gap-2">
+            <div class="flex flex-wrap items-center justify-center gap-3">
               <!-- Camera option -->
               <button
-                class="z-40 flex items-center gap-2 rounded-lg bg-zinc-100 px-4 py-2 outline-none transition-colors hover:bg-zinc-200 focus-visible:ring-1 focus-visible:ring-zinc-700 dark:bg-zinc-800 dark:hover:bg-zinc-700 dark:focus-visible:ring-zinc-200"
+                class="btn btn-secondary"
                 @click="startCameraScanning"
                 type="button"
               >
@@ -466,7 +476,7 @@ defineExpose({
 
               <!-- Paste from clipboard option -->
               <button
-                class="z-40 flex items-center gap-2 rounded-lg bg-zinc-100 px-4 py-2 outline-none transition-colors hover:bg-zinc-200 focus-visible:ring-1 focus-visible:ring-zinc-700 dark:bg-zinc-800 dark:hover:bg-zinc-700 dark:focus-visible:ring-zinc-200"
+                class="btn btn-secondary"
                 @click="pasteFromClipboard"
                 type="button"
                 v-if="IS_PASTE_IMAGE_FROM_CLIPBOARD_SUPPORTED"

@@ -19,7 +19,7 @@ export const theme = {
   },
   extend: {
     fontFamily: {
-      sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+      sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
       display: ['Space Grotesk', 'system-ui', 'sans-serif']
     },
     colors: {
@@ -58,10 +58,16 @@ export const theme = {
       }
     },
     borderRadius: {
+      '3xl': '24px',
+      '4xl': '32px',
       xl: 'calc(var(--radius) + 4px)',
       lg: 'var(--radius)',
       md: 'calc(var(--radius) - 2px)',
       sm: 'calc(var(--radius) - 4px)'
+    },
+    boxShadow: {
+      'surface': '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+      'surface-dark': '0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2)'
     },
     keyframes: {
       'accordion-down': {

@@ -69,95 +69,54 @@ const isModeToggleDisabled = computed(() => {
 </script>
 
 <template>
-  <main class="relative min-h-screen">
-    <!-- Subtle background pattern -->
-    <div class="pointer-events-none fixed inset-0 overflow-hidden">
-      <div
-        class="absolute -left-40 -top-40 h-[500px] w-[500px] rounded-full bg-violet-500/5 blur-3xl dark:bg-violet-500/10"
-      ></div>
-      <div
-        class="absolute -bottom-40 -right-40 h-[500px] w-[500px] rounded-full bg-indigo-500/5 blur-3xl dark:bg-indigo-500/10"
-      ></div>
-    </div>
-
-    <!-- Desktop header -->
-    <div
-      class="relative z-10 hidden md:mx-auto md:mb-2 md:mt-6 md:flex md:w-5/6 md:flex-row md:items-center md:justify-between md:px-4"
+  <main class="relative min-h-screen" style="background-color: var(--bg-body)">
+    <!-- Desktop header - Dark background -->
+    <header
+      class="sticky top-0 z-50 hidden h-20 items-center justify-between px-8 md:flex"
+      style="background-color: #09090b"
     >
-      <div class="flex items-center gap-6">
-        <a href="/" class="group flex items-center gap-2 no-underline hover:no-underline">
-          <div
-            class="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-violet-600 to-indigo-600 shadow-lg shadow-violet-500/25 transition-transform duration-200 group-hover:scale-105"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24">
-              <path
-                fill="white"
-                d="M3 11h8V3H3zm2-6h4v4H5zM3 21h8v-8H3zm2-6h4v4H5zm8-12v8h8V3zm6 6h-4V5h4zm-5 5h2v2h-2zm2 2h2v2h-2zm2 2h2v2h-2zm-4 2h2v2h-2zm2 2h2v2h-2zm2-4h2v2h-2zm2 2h2v2h-2z"
-              />
-            </svg>
-          </div>
-          <h1
-            class="text-2xl font-bold tracking-tight"
-            style="font-family: 'Space Grotesk', sans-serif"
-          >
-            <span class="gradient-text">cheQR</span>
-          </h1>
-        </a>
+      <a href="/" class="flex items-center gap-2 no-underline hover:opacity-100">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="2" y="2" width="9" height="9" rx="3" stroke="white" stroke-width="2.5" />
+          <rect x="13" y="2" width="9" height="9" rx="3" stroke="white" stroke-width="2.5" />
+          <rect x="2" y="13" width="9" height="9" rx="3" stroke="white" stroke-width="2.5" />
+          <path d="M16 16H20V20" stroke="white" stroke-width="2.5" stroke-linecap="round" />
+        </svg>
+        <span class="text-xl font-bold tracking-tight text-white" style="letter-spacing: -0.04em">cheQR</span>
+      </a>
 
-        <!-- Mode toggle -->
-        <div
-          class="flex items-center gap-1 rounded-2xl border border-gray-200/80 bg-white/60 p-1 shadow-sm backdrop-blur-xl dark:border-white/10 dark:bg-white/5"
-        >
+      <!-- Mode toggle - Segmented control -->
+      <div class="header-dark">
+        <div class="segmented-control" style="background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px)">
           <button
-            :class="[
-              'flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-medium outline-none transition-all duration-200 focus-visible:ring-2 focus-visible:ring-violet-500/40',
-              appMode === AppMode.Create
-                ? 'bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-md shadow-violet-500/25'
-                : 'text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200'
-            ]"
+            :class="['segmented-btn', appMode === AppMode.Create ? 'active' : '']"
             @click="setAppMode(AppMode.Create)"
             :disabled="isModeToggleDisabled"
             :aria-label="t('Switch to Create Mode')"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24">
-              <path
-                fill="currentColor"
-                d="M3 11h8V3H3zm2-6h4v4H5zM3 21h8v-8H3zm2-6h4v4H5zm8-12v8h8V3zm6 6h-4V5h4zm-6 12h8v-8h-8zm2-6h4v4h-4z"
-              />
-            </svg>
-            <span>{{ t('Create') }}</span>
+            {{ t('Create') }}
           </button>
           <button
-            :class="[
-              'flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-medium outline-none transition-all duration-200 focus-visible:ring-2 focus-visible:ring-violet-500/40',
-              appMode === AppMode.Scan
-                ? 'bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-md shadow-violet-500/25'
-                : 'text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200'
-            ]"
+            :class="['segmented-btn', appMode === AppMode.Scan ? 'active' : '']"
             @click="setAppMode(AppMode.Scan)"
             :disabled="isModeToggleDisabled"
             :aria-label="t('Switch to Scan Mode')"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24">
-              <path
-                fill="currentColor"
-                d="M4 4h4V2H2v6h2zm16-2h-4v2h4v4h2V2zM4 16H2v6h6v-2H4zm16 4h-4v2h6v-6h-2zM12 9a3 3 0 1 0 0 6a3 3 0 0 0 0-6"
-              />
-            </svg>
-            <span>{{ t('Scan') }}</span>
+            {{ t('Scan') }}
           </button>
         </div>
       </div>
 
-      <div class="flex items-center gap-1">
+      <div class="flex items-center gap-2">
         <button
-          class="icon-button flex h-9 w-9 items-center justify-center rounded-xl"
+          class="flex h-10 w-10 items-center justify-center rounded-full transition-all"
+          style="background: rgba(255, 255, 255, 0.1)"
           @click="toggleDarkModePreference"
           :aria-label="t('Toggle dark mode')"
         >
           <span v-if="isDarkModePreferenceSetBySystem">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24">
-              <g fill="currentColor" opacity="0.7">
+              <g fill="rgba(255,255,255,0.7)">
                 <path d="M12 16a4 4 0 0 0 0-8z" />
                 <path
                   fill-rule="evenodd"
@@ -172,11 +131,10 @@ const isModeToggleDisabled = computed(() => {
               xmlns="http://www.w3.org/2000/svg"
               fill="none"
               viewBox="0 0 24 24"
-              stroke="currentColor"
+              stroke="rgba(255,255,255,0.7)"
               stroke-width="2"
               width="20"
               height="20"
-              class="opacity-70"
             >
               <path
                 stroke-linecap="round"
@@ -188,15 +146,13 @@ const isModeToggleDisabled = computed(() => {
           <span v-else>
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              fill="none"
+              fill="rgba(255,255,255,0.7)"
               viewBox="0 0 24 24"
               stroke-width="2"
               width="20"
               height="20"
-              class="opacity-70"
             >
               <path
-                fill="currentColor"
                 stroke-linecap="round"
                 stroke-linejoin="round"
                 d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"
@@ -204,9 +160,9 @@ const isModeToggleDisabled = computed(() => {
             </svg>
           </span>
         </button>
-        <LanguageSelector />
+        <LanguageSelector :dark-header="true" />
       </div>
-    </div>
+    </header>
 
     <!-- Mobile sticky header -->
     <div
@@ -215,56 +171,35 @@ const isModeToggleDisabled = computed(() => {
     >
       <div class="flex justify-center">
         <div
-          class="flex items-center gap-1 rounded-2xl border border-gray-200/60 bg-white/70 p-1 shadow-lg backdrop-blur-xl dark:border-white/10 dark:bg-gray-900/70"
+          class="flex items-center gap-1 rounded-full p-1 shadow-lg"
+          style="background: #09090b"
         >
           <button
             :class="[
-              'flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-sm font-medium outline-none transition-all duration-200 focus-visible:ring-2 focus-visible:ring-violet-500/40',
+              'flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-semibold outline-none transition-all duration-200',
               appMode === AppMode.Create
-                ? 'bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-md shadow-violet-500/25'
-                : 'text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200',
-              isHeaderCollapsed ? 'py-1 text-xs' : 'py-1.5 text-sm'
+                ? 'bg-white text-black shadow-md'
+                : 'text-zinc-400 hover:text-white',
+              isHeaderCollapsed ? 'py-1.5 text-xs' : 'py-2 text-sm'
             ]"
             @click="setAppMode(AppMode.Create)"
             :disabled="isModeToggleDisabled"
             :aria-label="t('Switch to Create Mode')"
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              :width="isHeaderCollapsed ? 12 : 14"
-              :height="isHeaderCollapsed ? 12 : 14"
-              viewBox="0 0 24 24"
-            >
-              <path
-                fill="currentColor"
-                d="M3 11h8V3H3zm2-6h4v4H5zM3 21h8v-8H3zm2-6h4v4H5zm8-12v8h8V3zm6 6h-4V5h4zm-6 12h8v-8h-8zm2-6h4v4h-4z"
-              />
-            </svg>
             <span>{{ t('Create') }}</span>
           </button>
           <button
             :class="[
-              'flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-sm font-medium outline-none transition-all duration-200 focus-visible:ring-2 focus-visible:ring-violet-500/40',
+              'flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-semibold outline-none transition-all duration-200',
               appMode === AppMode.Scan
-                ? 'bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-md shadow-violet-500/25'
-                : 'text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200',
-              isHeaderCollapsed ? 'py-1 text-xs' : 'py-1.5 text-sm'
+                ? 'bg-white text-black shadow-md'
+                : 'text-zinc-400 hover:text-white',
+              isHeaderCollapsed ? 'py-1.5 text-xs' : 'py-2 text-sm'
             ]"
             @click="setAppMode(AppMode.Scan)"
             :disabled="isModeToggleDisabled"
             :aria-label="t('Switch to Scan Mode')"
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              :width="isHeaderCollapsed ? 12 : 14"
-              :height="isHeaderCollapsed ? 12 : 14"
-              viewBox="0 0 24 24"
-            >
-              <path
-                fill="currentColor"
-                d="M4 4h4V2H2v6h2zm16-2h-4v2h4v4h2V2zM4 16H2v6h6v-2H4zm16 4h-4v2h6v-6h-2zM12 9a3 3 0 1 0 0 6a3 3 0 0 0 0-6"
-              />
-            </svg>
             <span>{{ t('Scan') }}</span>
           </button>
 
@@ -277,16 +212,15 @@ const isModeToggleDisabled = computed(() => {
       </div>
     </div>
 
+    <!-- Main content area -->
     <div
-      class="relative z-10 grid min-h-screen place-items-center items-start bg-transparent p-6 pt-16 md:px-6 md:pt-4"
+      class="relative z-10 mx-auto min-h-[calc(100vh-80px)] w-full max-w-[1600px] p-6 pt-20 md:pt-6"
     >
-      <div class="w-full lg:w-5/6">
-        <div v-if="appMode === AppMode.Create">
-          <QRCodeCreate :initial-data="capturedData" />
-        </div>
-        <div v-else class="flex flex-col items-center justify-center py-8">
-          <QRCodeScan ref="qrCodeScanRef" @create-qr="useCapturedDataInCreateMode" />
-        </div>
+      <div v-if="appMode === AppMode.Create">
+        <QRCodeCreate :initial-data="capturedData" />
+      </div>
+      <div v-else class="flex flex-col items-center justify-center py-8">
+        <QRCodeScan ref="qrCodeScanRef" @create-qr="useCapturedDataInCreateMode" />
       </div>
     </div>
     <AppFooter />

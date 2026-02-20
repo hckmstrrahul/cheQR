@@ -20,6 +20,7 @@ defineProps<{
   items: { value: any; label: string }[]
   insertDividerAtIndexes?: number[]
   buttonLabel: string
+  darkHeader?: boolean
 }>()
 </script>
 
@@ -31,7 +32,12 @@ defineProps<{
         role="combobox"
         :aria-expanded="open"
         :aria-label="buttonLabel"
-        class="flex w-fit items-center justify-between gap-2 bg-zinc-50 text-zinc-900 focus-visible:ring-1 dark:bg-zinc-800 dark:text-zinc-100 dark:hover:bg-zinc-900 dark:hover:text-zinc-100"
+        :class="[
+          'flex w-fit items-center justify-between gap-2 focus-visible:ring-1',
+          darkHeader
+            ? 'border-transparent bg-white/10 text-white/70 hover:bg-white/20 hover:text-white'
+            : 'bg-zinc-50 text-zinc-900 dark:bg-zinc-800 dark:text-zinc-100 dark:hover:bg-zinc-900 dark:hover:text-zinc-100'
+        ]"
       >
         <slot name="button-icon"></slot>
         {{ value ? items.find((item) => item.value === value)?.label : 'Select item...' }}

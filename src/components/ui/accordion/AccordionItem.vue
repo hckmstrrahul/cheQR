@@ -15,7 +15,11 @@ const forwardedProps = useForwardProps(delegatedProps)
 </script>
 
 <template>
-  <AccordionItem v-bind="forwardedProps" :class="cn(props.class)">
+  <AccordionItem 
+    v-bind="forwardedProps" 
+    :class="cn('rounded-[20px] overflow-hidden mb-2', props.class)"
+    style="background: var(--bg-surface); box-shadow: 0 0 0 1px rgba(0,0,0,0.05);"
+  >
     <slot />
   </AccordionItem>
 </template>

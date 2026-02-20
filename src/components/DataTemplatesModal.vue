@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref, watch, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { Combobox } from '@/components/ui/Combobox'
 import {
   detectDataType,
   generateEmailData,
@@ -61,6 +62,31 @@ const vcardCity = ref('')
 const vcardState = ref('')
 const vcardCountry = ref('')
 const vcardVersion = ref('2')
+
+// Dropdown options
+const dataTypeOptions = computed(() => [
+  { value: 'text', label: t('Text') },
+  { value: 'url', label: t('URL') },
+  { value: 'email', label: t('Email') },
+  { value: 'phone', label: t('Phone') },
+  { value: 'sms', label: t('SMS') },
+  { value: 'wifi', label: t('WiFi') },
+  { value: 'vcard', label: t('vCard') },
+  { value: 'location', label: t('Location') },
+  { value: 'event', label: t('Event') }
+])
+
+const wifiEncryptionOptions = computed(() => [
+  { value: 'nopass', label: t('No encryption') },
+  { value: 'WEP', label: 'WEP' },
+  { value: 'WPA', label: 'WPA/WPA2' }
+])
+
+const vcardVersionOptions = computed(() => [
+  { value: '2', label: 'vCard 2.1' },
+  { value: '3', label: 'vCard 3.0' },
+  { value: '4', label: 'vCard 4.0' }
+])
 
 // Location refs
 const locationLatitude = ref<number | string>('')
@@ -482,7 +508,8 @@ const closeModal = () => {
     @click.self="closeModal"
   >
     <div
-      class="relative mb-4 flex min-h-[200px] w-[90%] max-w-full flex-col rounded-lg bg-white p-8 text-zinc-900 dark:bg-zinc-900 dark:text-zinc-100 md:mb-0 md:max-h-[85vh] md:max-w-[650px]"
+      class="surface-card relative mb-4 flex min-h-[200px] w-[90%] max-w-full flex-col p-8 md:mb-0 md:max-h-[85vh] md:max-w-[650px]"
+      style="border-radius: var(--radius-lg)"
     >
       <!-- Header -->
       <div class="-m-4 grid grid-cols-[auto_1fr_auto] items-center pb-8 md:grid-cols-3 md:pb-16">
@@ -528,17 +555,12 @@ const closeModal = () => {
       <!-- data type select -->
       <div class="flex flex-col gap-1 pe-4">
         <label for="dataType" class="label">{{ t('Data type') }}</label>
-        <select id="dataType" v-model="selectedType" class="mb-4 text-input">
-          <option value="text">{{ t('Text') }}</option>
-          <option value="url">{{ t('URL') }}</option>
-          <option value="email">{{ t('Email') }}</option>
-          <option value="phone">{{ t('Phone') }}</option>
-          <option value="sms">{{ t('SMS') }}</option>
-          <option value="wifi">{{ t('WiFi') }}</option>
-          <option value="vcard">{{ t('vCard') }}</option>
-          <option value="location">{{ t('Location') }}</option>
-          <option value="event">{{ t('Event') }}</option>
-        </select>
+        <Combobox
+          :items="dataTypeOptions"
+          v-model:value="selectedType"
+          :button-label="t('Select data type')"
+          class="mb-4"
+        />
       </div>
 
       <div class="grid place-items-center">
@@ -707,11 +729,11 @@ const closeModal = () => {
 
         <div v-if="selectedType === 'wifi'" class="flex flex-col gap-4">
           <label for="wifiEncryption" class="label">{{ t('Encryption') }}</label>
-          <select id="wifiEncryption" v-model="wifiEncryption" class="text-input">
-            <option value="nopass">{{ t('No encryption') }}</option>
-            <option value="WEP">WEP</option>
-            <option value="WPA">WPA/WPA2</option>
-          </select>
+          <Combobox
+            :items="wifiEncryptionOptions"
+            v-model:value="wifiEncryption"
+            :button-label="t('Select encryption type')"
+          />
 
           <label for="wifiSSID" class="label">
             {{ t('Wireless SSID') }} <span class="text-red-500" aria-hidden="true">*</span>
@@ -770,11 +792,11 @@ const closeModal = () => {
         >
           <div class="md:col-span-2">
             <label for="vcardVersion" class="label">{{ t('vCard Version') }}</label>
-            <select id="vcardVersion" v-model="vcardVersion" class="text-input">
-              <option value="2">vCard 2.1</option>
-              <option value="3">vCard 3.0</option>
-              <option value="4">vCard 4.0</option>
-            </select>
+            <Combobox
+              :items="vcardVersionOptions"
+              v-model:value="vcardVersion"
+              :button-label="t('Select vCard version')"
+            />
           </div>
           <div>
             <label for="vcardFirstName" class="label">{{ t('First Name') }}</label>
@@ -1032,8 +1054,8 @@ const closeModal = () => {
         </div>
       </div>
 
-      <div class="mt-4 flex justify-end gap-2 border-t border-gray-200 pt-4 dark:border-zinc-700">
-        <button @click="generateDataString" class="button">{{ t('Save') }}</button>
+      <div class="mt-4 flex justify-end gap-2 border-t pt-4" style="border-color: var(--border-light)">
+        <button @click="generateDataString" class="btn btn-primary">{{ t('Apply Data') }}</button>
       </div>
     </div>
   </div>

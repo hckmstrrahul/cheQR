@@ -116,10 +116,10 @@ export async function copyImageToClipboard(
   element: HTMLElement,
   options: Options,
   borderRadius?: string
-) {
+): Promise<boolean> {
   if (!IS_COPY_IMAGE_TO_CLIPBOARD_SUPPORTED) {
     console.error('Clipboard.write is not supported')
-    return
+    return false
   }
   try {
     const blob: Blob = await domtoimage.toBlob(
@@ -136,8 +136,10 @@ export async function copyImageToClipboard(
           )
         : blob
     await navigator.clipboard.write([new ClipboardItem({ [finalBlob.type]: finalBlob })])
+    return true
   } catch (error: any) {
     console.error('Error copying image to clipboard:', error)
+    return false
   }
 }
 

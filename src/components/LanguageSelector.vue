@@ -19,9 +19,19 @@ const locales = computed(() =>
   }))
 )
 
+const updateFontFamily = (localeValue: string) => {
+  const isEnglish = localeValue === 'en' || localeValue === 'en-US' || localeValue === 'en-GB'
+  const fontFamily = isEnglish
+    ? "'Google Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
+    : "'Noto Sans', 'Google Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
+  document.documentElement.style.setProperty('--font-family', fontFamily)
+  document.body.style.fontFamily = fontFamily
+}
+
 watch(locale, (newLocale) => {
   if (newLocale) {
     localStorage.setItem(STORAGE_KEY, newLocale)
+    updateFontFamily(newLocale)
   }
 })
 
@@ -30,6 +40,7 @@ onMounted(() => {
 
   if (savedLocale && sortedLocales.includes(savedLocale)) {
     locale.value = savedLocale
+    updateFontFamily(savedLocale)
     return
   }
 
@@ -40,6 +51,7 @@ onMounted(() => {
 
     if (sortedLocales.includes(browserLang)) {
       locale.value = browserLang
+      updateFontFamily(browserLang)
       return
     }
 
@@ -49,9 +61,13 @@ onMounted(() => {
 
     if (matchedLocale) {
       locale.value = matchedLocale
+      updateFontFamily(matchedLocale)
       return
     }
   }
+
+  // Default to English font if no locale matched
+  updateFontFamily('en')
 })
 </script>
 

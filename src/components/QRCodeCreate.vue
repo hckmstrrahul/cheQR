@@ -800,19 +800,33 @@ function closeCopyModal() {
 }
 // #endregion
 
-function copyQRToClipboard() {
+// #region Copy image confirmation
+const isCopySuccess = ref(false)
+let copySuccessTimeout: ReturnType<typeof setTimeout> | null = null
+
+async function copyQRToClipboard() {
   const el = document.getElementById('element-to-export')
   if (!el) {
     return
   }
   if (IS_COPY_IMAGE_TO_CLIPBOARD_SUPPORTED) {
-    copyImageToClipboard(el, getExportDimensions(), styledBorderRadiusFormatted.value)
+    const success = await copyImageToClipboard(el, getExportDimensions(), styledBorderRadiusFormatted.value)
+    if (success) {
+      isCopySuccess.value = true
+      if (copySuccessTimeout) {
+        clearTimeout(copySuccessTimeout)
+      }
+      copySuccessTimeout = setTimeout(() => {
+        isCopySuccess.value = false
+      }, 2000)
+    }
   } else if (!isLikelyMobileDevice.value) {
     // for now we only open the copy image modal on safari desktop because
     // this modal will be hidden behind the export image modal on mobile viewport.
     openCopyModal()
   }
 }
+// #endregion
 
 /**
  * Downloads QR code in specified format, handling both single and batch exports
@@ -1467,7 +1481,22 @@ async function generateBatchQRCodes(format: 'png' | 'svg' | 'jpg') {
               :disabled="isExportButtonDisabled"
               :aria-label="t('Copy QR Code to clipboard')"
             >
-              {{ t('Copy Image') }}
+              <svg
+                v-if="isCopySuccess"
+                xmlns="http://www.w3.org/2000/svg"
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                style="color: #16a34a;"
+              >
+                <polyline points="20 6 9 17 4 12"></polyline>
+              </svg>
+              <span v-else>{{ t('Copy Image') }}</span>
             </button>
             <button
               id="save-qr-code-config-button"

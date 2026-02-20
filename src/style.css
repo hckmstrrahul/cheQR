@@ -668,6 +668,58 @@ input[type="checkbox"]:hover {
   padding: 0 var(--space-4) var(--space-4) var(--space-4);
 }
 
+.data-type-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.data-type-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: var(--radius-pill);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: 1px solid var(--border-light);
+  background: var(--bg-surface);
+  color: var(--text-muted);
+}
+
+.data-type-pill svg {
+  flex-shrink: 0;
+  opacity: 0.7;
+}
+
+.data-type-pill:hover {
+  background: var(--bg-surface-hover);
+  border-color: var(--text-muted);
+  color: var(--text-main);
+}
+
+.data-type-pill:hover svg {
+  opacity: 1;
+}
+
+.data-type-pill.active {
+  background: var(--accent-primary);
+  border-color: var(--accent-primary);
+  color: var(--text-inverse);
+}
+
+.data-type-pill.active svg {
+  opacity: 1;
+}
+
+.dark .data-type-pill.active {
+  background: var(--bg-surface);
+  border-color: var(--accent-primary);
+  color: var(--text-main);
+}
+
 @media (max-width: 1024px) {
   .create-page-layout {
     flex-direction: column;

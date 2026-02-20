@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import BatchExportFieldsGuide from '@/components/BatchExportFieldsGuide.vue'
 import CopyImageModal from '@/components/CopyImageModal.vue'
-import DataTemplatesModal from '@/components/DataTemplatesModal.vue'
 import QRCodeFrame from '@/components/QRCodeFrame.vue'
 import StyledQRCode from '@/components/StyledQRCode.vue'
 import {
@@ -31,6 +30,15 @@ import {
   getSvgString
 } from '@/utils/convertToImage'
 import { parseCSV, validateCSVData, type CSVParsingResult } from '@/utils/csv'
+import {
+  generateEmailData,
+  generateEventData,
+  generateLocationData,
+  generatePhoneData,
+  generateSmsData,
+  generateVCardData,
+  generateWifiData
+} from '@/utils/dataEncoding'
 import { generateBatchExportFilename, processCsvDataForBatch } from '@/utils/csvBatchProcessing'
 import { getNumericCSSValue } from '@/utils/formatting'
 import { allFramePresets, defaultFramePreset, type FramePreset } from '@/utils/framePresets'
@@ -333,6 +341,266 @@ const cornersDotTypeOptions = computed(() =>
     label: t(type)
   }))
 )
+//#endregion
+
+//#region /* Data type selection for QR code content */
+const selectedDataType = ref<string>('url')
+
+const dataTypeOptions = computed(() => [
+  { value: 'url', label: t('URL'), icon: 'link' },
+  { value: 'text', label: t('Text'), icon: 'text' },
+  { value: 'wifi', label: t('WiFi'), icon: 'wifi' },
+  { value: 'vcard', label: t('vCard'), icon: 'user' },
+  { value: 'email', label: t('Email'), icon: 'mail' },
+  { value: 'phone', label: t('Phone'), icon: 'phone' },
+  { value: 'sms', label: t('SMS'), icon: 'message' },
+  { value: 'location', label: t('Location'), icon: 'map' },
+  { value: 'event', label: t('Event'), icon: 'calendar' }
+])
+
+// Email refs
+const emailAddress = ref('')
+const emailSubject = ref('')
+const emailBody = ref('')
+const emailCc = ref('')
+const emailBcc = ref('')
+
+// Phone refs
+const phoneNumber = ref('')
+
+// SMS refs
+const smsNumber = ref('')
+const smsMessage = ref('')
+
+// WiFi refs
+const wifiSSID = ref('')
+const wifiPassword = ref('')
+const wifiEncryption = ref('nopass')
+const wifiHidden = ref(false)
+
+// vCard refs
+const vcardFirstName = ref('')
+const vcardLastName = ref('')
+const vcardOrg = ref('')
+const vcardPosition = ref('')
+const vcardPhoneWork = ref('')
+const vcardPhonePrivate = ref('')
+const vcardPhoneMobile = ref('')
+const vcardEmail = ref('')
+const vcardWebsite = ref('')
+const vcardStreet = ref('')
+const vcardZipcode = ref('')
+const vcardCity = ref('')
+const vcardState = ref('')
+const vcardCountry = ref('')
+const vcardVersion = ref('2')
+
+// Location refs
+const locationLatitude = ref<number | string>('')
+const locationLongitude = ref<number | string>('')
+
+// Event refs
+const eventTitle = ref('')
+const eventLocation = ref('')
+const eventStartTime = ref('')
+const eventEndTime = ref('')
+
+// WiFi encryption options
+const wifiEncryptionOptions = computed(() => [
+  { value: 'nopass', label: t('No encryption') },
+  { value: 'WEP', label: 'WEP' },
+  { value: 'WPA', label: 'WPA/WPA2' }
+])
+
+// vCard version options
+const vcardVersionOptions = computed(() => [
+  { value: '2', label: 'vCard 2.1' },
+  { value: '3', label: 'vCard 3.0' },
+  { value: '4', label: 'vCard 4.0' }
+])
+
+const handleDataTypeSelect = (type: string) => {
+  selectedDataType.value = type
+  data.value = ''
+}
+
+// Generate data string based on selected type
+const generateDataFromFields = () => {
+  let generatedString = ''
+  switch (selectedDataType.value) {
+    case 'email':
+      generatedString = generateEmailData({
+        address: emailAddress.value,
+        subject: emailSubject.value,
+        body: emailBody.value,
+        cc: emailCc.value,
+        bcc: emailBcc.value
+      })
+      break
+    case 'phone':
+      generatedString = generatePhoneData({ phone: phoneNumber.value })
+      break
+    case 'sms':
+      generatedString = generateSmsData({ phone: smsNumber.value, message: smsMessage.value })
+      break
+    case 'wifi':
+      generatedString = generateWifiData({
+        ssid: wifiSSID.value,
+        password: wifiPassword.value,
+        encryption: wifiEncryption.value as 'nopass' | 'WEP' | 'WPA',
+        hidden: wifiHidden.value
+      })
+      break
+    case 'vcard':
+      generatedString = generateVCardData({
+        firstName: vcardFirstName.value,
+        lastName: vcardLastName.value,
+        org: vcardOrg.value,
+        position: vcardPosition.value,
+        phoneWork: vcardPhoneWork.value,
+        phonePrivate: vcardPhonePrivate.value,
+        phoneMobile: vcardPhoneMobile.value,
+        email: vcardEmail.value,
+        website: vcardWebsite.value,
+        street: vcardStreet.value,
+        zipcode: vcardZipcode.value,
+        city: vcardCity.value,
+        state: vcardState.value,
+        country: vcardCountry.value,
+        version: vcardVersion.value
+      })
+      break
+    case 'location':
+      generatedString = generateLocationData({
+        latitude: locationLatitude.value,
+        longitude: locationLongitude.value
+      })
+      break
+    case 'event':
+      generatedString = generateEventData({
+        title: eventTitle.value,
+        location: eventLocation.value,
+        startTime: eventStartTime.value,
+        endTime: eventEndTime.value
+      })
+      break
+  }
+  if (generatedString) {
+    data.value = generatedString
+  }
+}
+
+// Watch for changes in data type specific fields and auto-generate
+watch([emailAddress, emailSubject, emailBody, emailCc, emailBcc], () => {
+  if (selectedDataType.value === 'email' && emailAddress.value) {
+    generateDataFromFields()
+  }
+})
+
+watch(phoneNumber, () => {
+  if (selectedDataType.value === 'phone' && phoneNumber.value) {
+    generateDataFromFields()
+  }
+})
+
+watch([smsNumber, smsMessage], () => {
+  if (selectedDataType.value === 'sms' && smsNumber.value) {
+    generateDataFromFields()
+  }
+})
+
+watch([wifiSSID, wifiPassword, wifiEncryption, wifiHidden], () => {
+  if (selectedDataType.value === 'wifi' && wifiSSID.value) {
+    generateDataFromFields()
+  }
+})
+
+watch([vcardFirstName, vcardLastName, vcardOrg, vcardPosition, vcardPhoneWork, vcardPhonePrivate, vcardPhoneMobile, vcardEmail, vcardWebsite, vcardStreet, vcardZipcode, vcardCity, vcardState, vcardCountry, vcardVersion], () => {
+  if (selectedDataType.value === 'vcard') {
+    generateDataFromFields()
+  }
+})
+
+watch([locationLatitude, locationLongitude], () => {
+  if (selectedDataType.value === 'location' && locationLatitude.value && locationLongitude.value) {
+    generateDataFromFields()
+  }
+})
+
+watch([eventTitle, eventLocation, eventStartTime, eventEndTime], () => {
+  if (selectedDataType.value === 'event' && eventTitle.value) {
+    generateDataFromFields()
+  }
+})
+
+// Fill with example data
+const fillWithExampleData = () => {
+  const now = new Date()
+  const oneHourLater = new Date(now.getTime() + 60 * 60 * 1000)
+  const formatForInput = (date: Date) => {
+    const year = date.getFullYear()
+    const month = (date.getMonth() + 1).toString().padStart(2, '0')
+    const day = date.getDate().toString().padStart(2, '0')
+    const hours = date.getHours().toString().padStart(2, '0')
+    const minutes = date.getMinutes().toString().padStart(2, '0')
+    return `${year}-${month}-${day}T${hours}:${minutes}`
+  }
+
+  switch (selectedDataType.value) {
+    case 'text':
+      data.value = 'Have a wonderful day!'
+      break
+    case 'url':
+      data.value = 'https://github.com/lyqht/mini-qr'
+      break
+    case 'email':
+      emailAddress.value = 'test@example.com'
+      emailSubject.value = 'QR Code Test'
+      emailBody.value = 'This is a test email from cheQR!'
+      emailCc.value = 'cc@example.com'
+      emailBcc.value = 'bcc@example.com'
+      break
+    case 'phone':
+      phoneNumber.value = '+19876543210'
+      break
+    case 'sms':
+      smsNumber.value = '+19876543210'
+      smsMessage.value = 'Hello from cheQR!'
+      break
+    case 'wifi':
+      wifiSSID.value = 'MyWiFiNetwork'
+      wifiEncryption.value = 'WPA'
+      wifiPassword.value = 'Password123'
+      wifiHidden.value = false
+      break
+    case 'vcard':
+      vcardFirstName.value = 'Jane'
+      vcardLastName.value = 'Smith'
+      vcardOrg.value = 'Example Inc.'
+      vcardPosition.value = 'Developer'
+      vcardPhoneWork.value = '+1-555-000-1111'
+      vcardPhonePrivate.value = ''
+      vcardPhoneMobile.value = '+1-555-222-3333'
+      vcardEmail.value = 'jane.smith@example.com'
+      vcardWebsite.value = 'https://example.com'
+      vcardStreet.value = '456 Example Ave'
+      vcardCity.value = 'Othertown'
+      vcardState.value = 'NY'
+      vcardZipcode.value = '10001'
+      vcardCountry.value = 'USA'
+      break
+    case 'location':
+      locationLatitude.value = '37.7749'
+      locationLongitude.value = '-122.4194'
+      break
+    case 'event':
+      eventTitle.value = 'Project Sync'
+      eventLocation.value = 'Online'
+      eventStartTime.value = formatForInput(now)
+      eventEndTime.value = formatForInput(oneHourLater)
+      break
+  }
+}
 //#endregion
 
 //#region /* Frame settings */ Start empty, default is set intelligently */
@@ -918,22 +1186,6 @@ async function generateBatchQRCodes(format: 'png' | 'svg' | 'jpg') {
   }
 }
 // #endregion
-
-//#region /* Data modal */
-const isDataModalVisible = ref(false)
-const openDataModal = () => {
-  isDataModalVisible.value = true
-}
-
-const closeDataModal = () => {
-  isDataModalVisible.value = false
-}
-
-const updateDataFromModal = (newData: string) => {
-  data.value = newData
-  // Optionally trigger QR code regeneration here if needed
-}
-// #endregion
 </script>
 
 <template>
@@ -1119,51 +1371,6 @@ const updateDataFromModal = (newData: string) => {
             />
           </div>
         </div>
-        <!-- Action buttons grid -->
-        <div class="grid grid-cols-2 gap-3 mb-4">
-          <button
-            v-if="exportMode !== ExportMode.Batch"
-            id="copy-qr-image-button"
-            class="btn btn-secondary flex items-center justify-center gap-2"
-            @click="copyQRToClipboard"
-            :disabled="isExportButtonDisabled"
-            :title="
-              isExportButtonDisabled
-                ? t('Please enter data to encode first')
-                : t('Copy')
-            "
-            :aria-label="t('Copy QR Code to clipboard')"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
-            </svg>
-            {{ t('Copy') }}
-          </button>
-          <button
-            id="save-qr-code-config-button"
-            class="btn btn-secondary flex items-center justify-center gap-2"
-            @click="downloadQRConfig"
-            :title="t('Save JSON')"
-            :aria-label="t('Save QR Code configuration')"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-            </svg>
-            {{ t('Save JSON') }}
-          </button>
-        </div>
-        <button
-          id="load-qr-code-config-button"
-          class="btn btn-secondary w-full flex items-center justify-center gap-2 mb-6"
-          @click="loadQrConfigFromFile"
-          :aria-label="t('Load Configuration')"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-          </svg>
-          {{ t('Load Configuration') }}
-        </button>
-
         <!-- Export Card -->
         <div class="export-card">
           <h3 class="text-lg font-semibold mb-4" style="color: var(--text-main);">{{ t('Export QR Code') }}</h3>
@@ -1178,18 +1385,14 @@ const updateDataFromModal = (newData: string) => {
               placeholder="my-qr-code"
             />
           </div>
-          <div class="grid grid-cols-3 gap-3">
+          <!-- All export buttons in one grid -->
+          <div class="grid grid-cols-5 gap-2 mb-4">
             <button
               id="download-qr-image-button-png"
               class="btn btn-primary"
               style="height: 40px;"
               @click="() => downloadQRImage('png')"
               :disabled="isExportButtonDisabled"
-              :title="
-                isExportButtonDisabled
-                  ? t('Please enter data to encode first')
-                  : t('PNG')
-              "
               :aria-label="t('Download QR Code as PNG')"
             >
               PNG
@@ -1200,11 +1403,6 @@ const updateDataFromModal = (newData: string) => {
               style="height: 40px; background: white;"
               @click="() => downloadQRImage('jpg')"
               :disabled="isExportButtonDisabled"
-              :title="
-                isExportButtonDisabled
-                  ? t('Please enter data to encode first')
-                  : t('JPG')
-              "
               :aria-label="t('Download QR Code as JPG')"
             >
               JPG
@@ -1215,16 +1413,43 @@ const updateDataFromModal = (newData: string) => {
               style="height: 40px; background: white;"
               @click="() => downloadQRImage('svg')"
               :disabled="isExportButtonDisabled"
-              :title="
-                isExportButtonDisabled
-                  ? t('Please enter data to encode first')
-                  : t('SVG')
-              "
               :aria-label="t('Download QR Code as SVG')"
             >
               SVG
             </button>
+            <button
+              v-if="exportMode !== ExportMode.Batch"
+              id="copy-qr-image-button"
+              class="btn btn-secondary"
+              style="height: 40px; background: white;"
+              @click="copyQRToClipboard"
+              :disabled="isExportButtonDisabled"
+              :aria-label="t('Copy QR Code to clipboard')"
+            >
+              {{ t('Copy') }}
+            </button>
+            <button
+              id="save-qr-code-config-button"
+              class="btn btn-secondary"
+              style="height: 40px; background: white;"
+              @click="downloadQRConfig"
+              :aria-label="t('Save QR Code configuration')"
+            >
+              JSON
+            </button>
           </div>
+          <button
+            id="load-qr-code-config-button"
+            class="btn btn-secondary w-full flex items-center justify-center gap-2"
+            style="height: 40px; background: white;"
+            @click="loadQrConfigFromFile"
+            :aria-label="t('Load Configuration')"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+            </svg>
+            {{ t('Load Config') }}
+          </button>
         </div>
       </div>
     </Teleport>
@@ -1240,11 +1465,7 @@ const updateDataFromModal = (newData: string) => {
         <AccordionItem value="frame-settings" class="accordion-item">
           <AccordionTrigger
             class="accordion-header"
-            ><span class="flex flex-row items-center gap-2"
-              ><span id="frame-settings-title" class="text-lg font-semibold" style="color: var(--text-main);">{{ t('Frame settings') }}</span>
-              <span class="badge">
-                {{ t('New!') }}
-              </span></span
+            ><span id="frame-settings-title" class="text-lg font-semibold" style="color: var(--text-main);">{{ t('Frame settings') }}</span
             ></AccordionTrigger
           >
           <AccordionContent class="accordion-content">
@@ -1331,44 +1552,295 @@ const updateDataFromModal = (newData: string) => {
                 <div class="flex w-full flex-col flex-wrap gap-4 sm:flex-row sm:gap-x-8">
                   <!-- Data to encode area -->
                   <div class="w-full sm:grow">
-                    <!-- Header row: Label + Mode Toggles -->
+                    <!-- Header row: Label + Mode Toggles + Use Example -->
                     <div class="mb-4">
                       <label for="data" class="mb-3 block">{{ t('Data to encode') }}</label>
-                      <!-- Mode Toggle - Segmented Control -->
-                      <div class="segmented-control mb-4" style="width: fit-content;">
+                      <div class="flex items-center gap-3 flex-wrap">
+                        <!-- Mode Toggle - Segmented Control -->
+                        <div class="segmented-control" style="width: fit-content;">
+                          <button
+                            :class="['segmented-btn', exportMode === ExportMode.Single ? 'active' : '']"
+                            @click="exportMode = ExportMode.Single"
+                          >
+                            {{ $t('Single') }}
+                          </button>
+                          <button
+                            :class="['segmented-btn', exportMode === ExportMode.Batch ? 'active' : '']"
+                            @click="exportMode = ExportMode.Batch"
+                          >
+                            {{ $t('Batch') }}
+                          </button>
+                        </div>
+                        <!-- Use Example Button -->
                         <button
-                          :class="['segmented-btn', exportMode === ExportMode.Single ? 'active' : '']"
-                          @click="exportMode = ExportMode.Single"
+                          v-if="exportMode === ExportMode.Single"
+                          @click="fillWithExampleData"
+                          class="btn btn-secondary gap-2"
+                          style="height: 36px; font-size: 13px; background: white; border: 1px solid var(--border-light);"
                         >
-                          {{ $t('Single') }}
-                        </button>
-                        <button
-                          :class="['segmented-btn', exportMode === ExportMode.Batch ? 'active' : '']"
-                          @click="exportMode = ExportMode.Batch"
-                        >
-                          {{ $t('Batch') }}
+                          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M8 10h8m-8 4h6m4-9H4a1 1 0 0 0-1 1v14a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1V6a1 1 0 0 0-1-1Z"/>
+                          </svg>
+                          {{ t('Use example') }}
                         </button>
                       </div>
                     </div>
                     <!-- Single Mode Input -->
-                    <div v-if="exportMode === ExportMode.Single" class="flex flex-col items-start">
-                      <textarea
-                        id="data"
-                        v-model="data"
-                        class="w-full text-input"
-                        rows="3"
-                        :placeholder="t('https://example.com')"
-                      ></textarea>
-                      <button
-                        @click="openDataModal"
-                        aria-haspopup="dialog"
-                        :aria-expanded="isDataModalVisible"
-                        class="btn btn-secondary mt-3"
-                        style="height: 36px; font-size: 13px; background: white; border: 1px solid var(--border-light);"
-                        :aria-label="t('Open data type generator')"
-                      >
-                        {{ t('Open Data Templates') }}
-                      </button>
+                    <div v-if="exportMode === ExportMode.Single" class="flex flex-col items-start w-full">
+                      <!-- Data Type Pills with Icons -->
+                      <div class="data-type-pills mb-4">
+                        <button
+                          v-for="dataType in dataTypeOptions"
+                          :key="dataType.value"
+                          :class="['data-type-pill', selectedDataType === dataType.value ? 'active' : '']"
+                          @click="handleDataTypeSelect(dataType.value)"
+                        >
+                          <!-- URL Icon -->
+                          <svg v-if="dataType.icon === 'link'" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+                            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+                          </svg>
+                          <!-- Text Icon -->
+                          <svg v-if="dataType.icon === 'text'" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="4 7 4 4 20 4 20 7"/>
+                            <line x1="9" y1="20" x2="15" y2="20"/>
+                            <line x1="12" y1="4" x2="12" y2="20"/>
+                          </svg>
+                          <!-- WiFi Icon -->
+                          <svg v-if="dataType.icon === 'wifi'" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M5 12.55a11 11 0 0 1 14.08 0"/>
+                            <path d="M1.42 9a16 16 0 0 1 21.16 0"/>
+                            <path d="M8.53 16.11a6 6 0 0 1 6.95 0"/>
+                            <line x1="12" y1="20" x2="12.01" y2="20"/>
+                          </svg>
+                          <!-- User/vCard Icon -->
+                          <svg v-if="dataType.icon === 'user'" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                            <circle cx="12" cy="7" r="4"/>
+                          </svg>
+                          <!-- Mail Icon -->
+                          <svg v-if="dataType.icon === 'mail'" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                            <polyline points="22,6 12,13 2,6"/>
+                          </svg>
+                          <!-- Phone Icon -->
+                          <svg v-if="dataType.icon === 'phone'" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+                          </svg>
+                          <!-- SMS/Message Icon -->
+                          <svg v-if="dataType.icon === 'message'" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                          </svg>
+                          <!-- Map/Location Icon -->
+                          <svg v-if="dataType.icon === 'map'" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                            <circle cx="12" cy="10" r="3"/>
+                          </svg>
+                          <!-- Calendar/Event Icon -->
+                          <svg v-if="dataType.icon === 'calendar'" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                            <line x1="16" y1="2" x2="16" y2="6"/>
+                            <line x1="8" y1="2" x2="8" y2="6"/>
+                            <line x1="3" y1="10" x2="21" y2="10"/>
+                          </svg>
+                          {{ dataType.label }}
+                        </button>
+                      </div>
+
+                      <!-- URL/Text Input (simple textarea) -->
+                      <div v-if="selectedDataType === 'url' || selectedDataType === 'text'" class="w-full">
+                        <textarea
+                          id="data"
+                          v-model="data"
+                          class="w-full text-input"
+                          rows="3"
+                          :placeholder="selectedDataType === 'url' ? 'https://example.com' : t('Enter your text here')"
+                        ></textarea>
+                      </div>
+
+                      <!-- Email Input Fields -->
+                      <div v-if="selectedDataType === 'email'" class="w-full space-y-3">
+                        <div>
+                          <label class="input-label">{{ t('Email Address') }} <span class="text-red-500">*</span></label>
+                          <input type="email" v-model="emailAddress" class="text-input w-full" placeholder="recipient@example.com" />
+                        </div>
+                        <div>
+                          <label class="input-label">{{ t('CC') }}</label>
+                          <input type="email" v-model="emailCc" class="text-input w-full" :placeholder="t('Optional CC')" />
+                        </div>
+                        <div>
+                          <label class="input-label">{{ t('BCC') }}</label>
+                          <input type="email" v-model="emailBcc" class="text-input w-full" :placeholder="t('Optional BCC')" />
+                        </div>
+                        <div>
+                          <label class="input-label">{{ t('Subject') }}</label>
+                          <input type="text" v-model="emailSubject" class="text-input w-full" :placeholder="t('Optional subject line')" />
+                        </div>
+                        <div>
+                          <label class="input-label">{{ t('Message') }}</label>
+                          <textarea v-model="emailBody" class="text-input w-full" rows="2" :placeholder="t('Optional email body')"></textarea>
+                        </div>
+                      </div>
+
+                      <!-- Phone Input Fields -->
+                      <div v-if="selectedDataType === 'phone'" class="w-full space-y-3">
+                        <div>
+                          <label class="input-label">{{ t('Phone Number') }} <span class="text-red-500">*</span></label>
+                          <input type="tel" v-model="phoneNumber" class="text-input w-full" placeholder="+1234567890" />
+                        </div>
+                      </div>
+
+                      <!-- SMS Input Fields -->
+                      <div v-if="selectedDataType === 'sms'" class="w-full space-y-3">
+                        <div>
+                          <label class="input-label">{{ t('Phone Number') }} <span class="text-red-500">*</span></label>
+                          <input type="tel" v-model="smsNumber" class="text-input w-full" placeholder="+1234567890" />
+                        </div>
+                        <div>
+                          <label class="input-label">{{ t('Message') }}</label>
+                          <textarea v-model="smsMessage" class="text-input w-full" rows="2" :placeholder="t('Optional SMS message')"></textarea>
+                        </div>
+                      </div>
+
+                      <!-- WiFi Input Fields -->
+                      <div v-if="selectedDataType === 'wifi'" class="w-full space-y-3">
+                        <div>
+                          <label class="input-label">{{ t('Encryption') }}</label>
+                          <Combobox
+                            :items="wifiEncryptionOptions"
+                            v-model:value="wifiEncryption"
+                            :button-label="t('Select encryption type')"
+                          />
+                        </div>
+                        <div>
+                          <label class="input-label">{{ t('Wireless SSID') }} <span class="text-red-500">*</span></label>
+                          <input type="text" v-model="wifiSSID" class="text-input w-full" :placeholder="t('Your network name')" />
+                        </div>
+                        <div>
+                          <label class="input-label">{{ t('Password') }} <span v-if="wifiEncryption !== 'nopass'" class="text-red-500">*</span></label>
+                          <input type="password" v-model="wifiPassword" class="text-input w-full" :disabled="wifiEncryption === 'nopass'" :placeholder="t('Network password')" />
+                        </div>
+                        <label class="checkbox-wrapper flex items-center gap-3 cursor-pointer">
+                          <input type="checkbox" v-model="wifiHidden" />
+                          <span class="text-sm" style="color: var(--text-main);">{{ t('Hidden SSID') }}</span>
+                        </label>
+                      </div>
+
+                      <!-- vCard Input Fields -->
+                      <div v-if="selectedDataType === 'vcard'" class="w-full space-y-3">
+                        <div>
+                          <label class="input-label">{{ t('vCard Version') }}</label>
+                          <Combobox
+                            :items="vcardVersionOptions"
+                            v-model:value="vcardVersion"
+                            :button-label="t('Select vCard version')"
+                          />
+                        </div>
+                        <div class="grid grid-cols-2 gap-3">
+                          <div>
+                            <label class="input-label">{{ t('First Name') }}</label>
+                            <input type="text" v-model="vcardFirstName" class="text-input w-full" :placeholder="t('First Name')" />
+                          </div>
+                          <div>
+                            <label class="input-label">{{ t('Last Name') }}</label>
+                            <input type="text" v-model="vcardLastName" class="text-input w-full" :placeholder="t('Last Name')" />
+                          </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-3">
+                          <div>
+                            <label class="input-label">{{ t('Organization') }}</label>
+                            <input type="text" v-model="vcardOrg" class="text-input w-full" :placeholder="t('Company')" />
+                          </div>
+                          <div>
+                            <label class="input-label">{{ t('Position') }}</label>
+                            <input type="text" v-model="vcardPosition" class="text-input w-full" :placeholder="t('Job Title')" />
+                          </div>
+                        </div>
+                        <div class="grid grid-cols-3 gap-3">
+                          <div>
+                            <label class="input-label">{{ t('Work Phone') }}</label>
+                            <input type="tel" v-model="vcardPhoneWork" class="text-input w-full" placeholder="+1-555-000-0000" />
+                          </div>
+                          <div>
+                            <label class="input-label">{{ t('Mobile') }}</label>
+                            <input type="tel" v-model="vcardPhoneMobile" class="text-input w-full" placeholder="+1-555-000-0000" />
+                          </div>
+                          <div>
+                            <label class="input-label">{{ t('Private') }}</label>
+                            <input type="tel" v-model="vcardPhonePrivate" class="text-input w-full" placeholder="+1-555-000-0000" />
+                          </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-3">
+                          <div>
+                            <label class="input-label">{{ t('Email') }}</label>
+                            <input type="email" v-model="vcardEmail" class="text-input w-full" placeholder="email@example.com" />
+                          </div>
+                          <div>
+                            <label class="input-label">{{ t('Website') }}</label>
+                            <input type="url" v-model="vcardWebsite" class="text-input w-full" placeholder="https://example.com" />
+                          </div>
+                        </div>
+                        <div>
+                          <label class="input-label">{{ t('Street') }}</label>
+                          <input type="text" v-model="vcardStreet" class="text-input w-full" :placeholder="t('Street Address')" />
+                        </div>
+                        <div class="grid grid-cols-2 gap-3">
+                          <div>
+                            <label class="input-label">{{ t('City') }}</label>
+                            <input type="text" v-model="vcardCity" class="text-input w-full" :placeholder="t('City')" />
+                          </div>
+                          <div>
+                            <label class="input-label">{{ t('State') }}</label>
+                            <input type="text" v-model="vcardState" class="text-input w-full" :placeholder="t('State/Province')" />
+                          </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-3">
+                          <div>
+                            <label class="input-label">{{ t('Zip Code') }}</label>
+                            <input type="text" v-model="vcardZipcode" class="text-input w-full" :placeholder="t('Postal Code')" />
+                          </div>
+                          <div>
+                            <label class="input-label">{{ t('Country') }}</label>
+                            <input type="text" v-model="vcardCountry" class="text-input w-full" :placeholder="t('Country')" />
+                          </div>
+                        </div>
+                      </div>
+
+                      <!-- Location Input Fields -->
+                      <div v-if="selectedDataType === 'location'" class="w-full space-y-3">
+                        <div class="grid grid-cols-2 gap-3">
+                          <div>
+                            <label class="input-label">{{ t('Latitude') }} <span class="text-red-500">*</span></label>
+                            <input type="number" step="any" v-model="locationLatitude" class="text-input w-full" placeholder="37.7749" />
+                          </div>
+                          <div>
+                            <label class="input-label">{{ t('Longitude') }} <span class="text-red-500">*</span></label>
+                            <input type="number" step="any" v-model="locationLongitude" class="text-input w-full" placeholder="-122.4194" />
+                          </div>
+                        </div>
+                      </div>
+
+                      <!-- Event Input Fields -->
+                      <div v-if="selectedDataType === 'event'" class="w-full space-y-3">
+                        <div>
+                          <label class="input-label">{{ t('Event Title') }} <span class="text-red-500">*</span></label>
+                          <input type="text" v-model="eventTitle" class="text-input w-full" :placeholder="t('Event name')" />
+                        </div>
+                        <div>
+                          <label class="input-label">{{ t('Location') }}</label>
+                          <input type="text" v-model="eventLocation" class="text-input w-full" :placeholder="t('Event location')" />
+                        </div>
+                        <div class="grid grid-cols-2 gap-3">
+                          <div>
+                            <label class="input-label">{{ t('Start Time') }} <span class="text-red-500">*</span></label>
+                            <input type="datetime-local" v-model="eventStartTime" class="text-input w-full" />
+                          </div>
+                          <div>
+                            <label class="input-label">{{ t('End Time') }} <span class="text-red-500">*</span></label>
+                            <input type="datetime-local" v-model="eventEndTime" class="text-input w-full" />
+                          </div>
+                        </div>
+                      </div>
                     </div>
                     <template v-if="exportMode === ExportMode.Batch">
                       <template v-if="!inputFileForBatchEncoding">
@@ -1701,13 +2173,6 @@ const updateDataFromModal = (newData: string) => {
       </Accordion>
     </section>
   </div>
-
-  <DataTemplatesModal
-    :show="isDataModalVisible"
-    :initial-data="data"
-    @close="closeDataModal"
-    @update:data="updateDataFromModal"
-  />
 
   <!-- Fallback modal for manual copy in Safari -->
   <CopyImageModal

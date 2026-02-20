@@ -123,7 +123,7 @@ legend {
   background: var(--bg-input);
   border: 2px solid transparent;
   color: var(--text-main);
-  padding: 14px 16px;
+  padding: 16px;
   border-radius: var(--radius-md);
   font-family: inherit;
   font-size: 15px;
@@ -486,6 +486,72 @@ input[type="checkbox"]:hover {
   border: 1px solid rgba(255,255,255,0.03);
 }
 
+.aspect-lock-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 52px;
+  color: var(--text-muted);
+  flex-shrink: 0;
+  cursor: default;
+}
+
+.label-with-tooltip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: var(--space-2);
+}
+
+.label-with-tooltip label {
+  margin-bottom: 0;
+}
+
+.tooltip-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-placeholder);
+  cursor: pointer;
+  transition: color 0.2s;
+  position: relative;
+}
+
+.tooltip-icon:hover {
+  color: var(--text-muted);
+}
+
+.tooltip-icon[data-tooltip]:hover::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--text-main);
+  color: var(--text-inverse);
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+  z-index: 100;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  pointer-events: none;
+}
+
+.tooltip-icon[data-tooltip]:hover::before {
+  content: '';
+  position: absolute;
+  bottom: calc(100% + 2px);
+  left: 50%;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-top-color: var(--text-main);
+  z-index: 100;
+  pointer-events: none;
+}
+
 .color-picker-wrapper {
   display: flex;
   align-items: center;
@@ -622,8 +688,8 @@ input[type="checkbox"]:hover {
 }
 
 .accordion-content {
-  padding: 0 var(--space-4) var(--space-5) var(--space-4);
-  border-top: 1px solid var(--border-light);
+  padding: 0 var(--space-4) var(--space-4) var(--space-4);
+  border-top: none;
   padding-top: var(--space-4);
 }
 
@@ -666,6 +732,7 @@ input[type="checkbox"]:hover {
   margin: 0 auto;
   width: 100%;
   padding: 0 var(--space-4) var(--space-4) var(--space-4);
+  height: fit-content;
 }
 
 .data-type-pills {

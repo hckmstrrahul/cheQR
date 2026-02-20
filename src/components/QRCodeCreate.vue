@@ -98,10 +98,23 @@ watch(
   { immediate: true }
 )
 const image = ref()
-const width = ref()
-const height = ref()
+const width = ref(400)
+const height = ref(400)
 const margin = ref()
 const imageMargin = ref()
+
+// Keep width and height synced (1:1 aspect ratio)
+watch(width, (newWidth) => {
+  if (newWidth && height.value !== newWidth) {
+    height.value = newWidth
+  }
+})
+
+watch(height, (newHeight) => {
+  if (newHeight && width.value !== newHeight) {
+    width.value = newHeight
+  }
+})
 
 watch(
   () => props.initialData,
@@ -1189,16 +1202,17 @@ async function generateBatchQRCodes(format: 'png' | 'svg' | 'jpg') {
 </script>
 
 <template>
-  <div
-    class="create-page-layout flex items-start justify-center gap-6 overflow-x-hidden md:flex-row lg:pb-0"
-  >
+  <div class="flex flex-wrap">
+    <div
+      class="create-page-layout flex items-start justify-start gap-[30px] overflow-x-hidden md:flex-row lg:pb-0"
+    >
     <!-- Preview Panel (Left side on large screens) -->
     <div
       v-if="isLarge"
       ref="mainContentContainer"
       id="main-content-container"
       class="preview-panel sticky top-6 flex w-[420px] shrink-0 flex-col p-8 overflow-y-auto"
-      style="height: calc(100vh - 48px); max-height: 1000px;"
+      style="height: fit-content;"
     ></div>
     <!-- Bottom sheet on small screens -->
     <Drawer v-else>
@@ -1413,11 +1427,11 @@ async function generateBatchQRCodes(format: 'png' | 'svg' | 'jpg') {
             />
           </div>
           <!-- All export buttons in one grid -->
-          <div class="grid grid-cols-5 gap-2 mb-4">
+          <div class="flex flex-wrap gap-2 mb-4">
             <button
               id="download-qr-image-button-png"
-              class="btn btn-primary"
-              style="height: 40px;"
+              class="btn btn-secondary"
+              style="height: 40px; background: white;"
               @click="() => downloadQRImage('png')"
               :disabled="isExportButtonDisabled"
               :aria-label="t('Download QR Code as PNG')"
@@ -1453,7 +1467,7 @@ async function generateBatchQRCodes(format: 'png' | 'svg' | 'jpg') {
               :disabled="isExportButtonDisabled"
               :aria-label="t('Copy QR Code to clipboard')"
             >
-              {{ t('Copy') }}
+              {{ t('Copy Image') }}
             </button>
             <button
               id="save-qr-code-config-button"
@@ -1538,7 +1552,7 @@ async function generateBatchQRCodes(format: 'png' | 'svg' | 'jpg') {
                 <div class="flex w-full flex-col flex-wrap gap-4 sm:flex-row sm:gap-x-8">
                   <div class="w-full sm:grow">
                     <!-- Mode Toggle + Use Example -->
-                    <div class="flex items-center gap-3 flex-wrap mb-4">
+                    <div class="flex items-center justify-between flex-nowrap mb-4">
                       <!-- Mode Toggle - Segmented Control -->
                       <div class="segmented-control" style="width: fit-content;">
                         <button
@@ -1568,7 +1582,7 @@ async function generateBatchQRCodes(format: 'png' | 'svg' | 'jpg') {
                       </button>
                     </div>
                     <!-- Single Mode Input -->
-                    <div v-if="exportMode === ExportMode.Single" class="flex flex-col items-start w-full">
+                    <div v-if="exportMode === ExportMode.Single" class="flex flex-col items-start w-full gap-[10px]" style="padding-top: 20px; height: fit-content;">
                       <!-- Data Type Pills with Icons -->
                       <div class="data-type-pills mb-4">
                         <button
@@ -1630,12 +1644,13 @@ async function generateBatchQRCodes(format: 'png' | 'svg' | 'jpg') {
                       </div>
 
                       <!-- URL/Text Input (simple textarea) -->
-                      <div v-if="selectedDataType === 'url' || selectedDataType === 'text'" class="w-full">
+                      <div v-if="selectedDataType === 'url' || selectedDataType === 'text'" class="w-full" style="height: fit-content;">
                         <textarea
                           id="data"
                           v-model="data"
                           class="w-full text-input"
                           rows="3"
+                          style="height: 100%;"
                           :placeholder="selectedDataType === 'url' ? 'https://example.com' : t('Enter your text here')"
                         ></textarea>
                       </div>
@@ -2072,28 +2087,37 @@ async function generateBatchQRCodes(format: 'png' | 'svg' | 'jpg') {
                   </label>
                 </div>
               </div>
-              <div class="grid grid-cols-3 gap-4">
-                <div class="input-group">
+              <div class="flex items-end gap-4">
+                <div class="input-group flex-1">
                   <label for="width">{{ t('Width') }}</label>
                   <input
                     class="text-input"
                     id="width"
                     type="number"
-                    placeholder="1080"
+                    placeholder="400"
                     v-model="width"
                   />
                 </div>
-                <div class="input-group">
+                <div
+                  class="aspect-lock-icon mb-[var(--space-4)]"
+                  :title="t('Aspect ratio locked to 1:1')"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                  </svg>
+                </div>
+                <div class="input-group flex-1">
                   <label for="height">{{ t('Height') }}</label>
                   <input
                     class="text-input"
                     id="height"
                     type="number"
-                    placeholder="1080"
+                    placeholder="400"
                     v-model="height"
                   />
                 </div>
-                <div class="input-group">
+                <div class="input-group flex-1">
                   <label for="border-radius">{{ t('Radius') }}</label>
                   <input
                     class="text-input"
@@ -2106,9 +2130,16 @@ async function generateBatchQRCodes(format: 'png' | 'svg' | 'jpg') {
               </div>
               <div class="flex w-full flex-col gap-4 sm:flex-row sm:gap-8">
                 <div class="w-full sm:w-1/2">
-                  <label for="margin">
-                    {{ t('Margin (px)') }}
-                  </label>
+                  <div class="label-with-tooltip">
+                    <label for="margin">{{ t('Margin (px)') }}</label>
+                    <span class="tooltip-icon" :data-tooltip="t('Space around the entire QR code')">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"/>
+                        <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+                        <line x1="12" y1="17" x2="12.01" y2="17"/>
+                      </svg>
+                    </span>
+                  </div>
                   <input
                     class="text-input"
                     id="margin"
@@ -2118,9 +2149,16 @@ async function generateBatchQRCodes(format: 'png' | 'svg' | 'jpg') {
                   />
                 </div>
                 <div class="w-full sm:w-1/2">
-                  <label for="image-margin">
-                    {{ t('Image margin (px)') }}
-                  </label>
+                  <div class="label-with-tooltip">
+                    <label for="image-margin">{{ t('Image margin (px)') }}</label>
+                    <span class="tooltip-icon" :data-tooltip="t('Space around the logo image')">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"/>
+                        <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+                        <line x1="12" y1="17" x2="12.01" y2="17"/>
+                      </svg>
+                    </span>
+                  </div>
                   <input
                     class="text-input"
                     id="image-margin"
@@ -2132,9 +2170,9 @@ async function generateBatchQRCodes(format: 'png' | 'svg' | 'jpg') {
               </div>
               <div
                 id="dots-squares-settings"
-                class="grid grid-cols-2 gap-4"
+                class="flex items-center justify-between pt-[30px] h-fit"
               >
-                <div class="input-group">
+                <div class="input-group !mb-0">
                   <label for="dots-type">{{ t('Dots type') }}</label>
                   <Combobox
                     :items="dotsTypeOptions"
@@ -2142,7 +2180,7 @@ async function generateBatchQRCodes(format: 'png' | 'svg' | 'jpg') {
                     :button-label="t('Select dots type')"
                   />
                 </div>
-                <div class="input-group">
+                <div class="input-group !mb-0">
                   <label for="corners-square-type">{{ t('Corners Square') }}</label>
                   <Combobox
                     :items="cornersSquareTypeOptions"
@@ -2150,7 +2188,7 @@ async function generateBatchQRCodes(format: 'png' | 'svg' | 'jpg') {
                     :button-label="t('Select corners square type')"
                   />
                 </div>
-                <div class="input-group">
+                <div class="input-group !mb-0">
                   <label for="corners-dot-type">{{ t('Corners Dot') }}</label>
                   <Combobox
                     :items="cornersDotTypeOptions"
@@ -2158,26 +2196,20 @@ async function generateBatchQRCodes(format: 'png' | 'svg' | 'jpg') {
                     :button-label="t('Select corners dot type')"
                   />
                 </div>
-                <div class="input-group">
-                  <div class="flex items-center gap-2 mb-2">
+                <div class="input-group !mb-0">
+                  <div class="label-with-tooltip">
                     <label for="error-correction" class="!mb-0">{{ t('Error Correction') }}</label>
                     <a
                       href="https://docs.uniqode.com/en/articles/7219782-what-is-the-recommended-error-correction-level-for-printing-a-qr-code"
                       target="_blank"
-                      class="inline-flex items-center justify-center w-5 h-5 rounded-full"
-                      style="background: var(--bg-input);"
+                      class="tooltip-icon"
+                      :title="t('Higher = more damage resistant, but denser QR code')"
                       :aria-label="t('What is error correction level?')"
                     >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="14"
-                        height="14"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          fill="var(--text-muted)"
-                          d="M11.95 18q.525 0 .888-.363t.362-.887t-.362-.888t-.888-.362t-.887.363t-.363.887t.363.888t.887.362m.05 4q-2.075 0-3.9-.788t-3.175-2.137T2.788 15.9T2 12t.788-3.9t2.137-3.175T8.1 2.788T12 2t3.9.788t3.175 2.137T21.213 8.1T22 12t-.788 3.9t-2.137 3.175t-3.175 2.138T12 22m0-2q3.35 0 5.675-2.325T20 12t-2.325-5.675T12 4T6.325 6.325T4 12t2.325 5.675T12 20m.1-12.3q.625 0 1.088.4t.462 1q0 .55-.337.975t-.763.8q-.575.5-1.012 1.1t-.438 1.35q0 .35.263.588t.612.237q.375 0 .638-.25t.337-.625q.1-.525.45-.937t.75-.788q.575-.55.988-1.2t.412-1.45q0-1.275-1.037-2.087T12.1 6q-.95 0-1.812.4T8.975 7.625q-.175.3-.112.638t.337.512q.35.2.725.125t.625-.425q.275-.375.688-.575t.862-.2"
-                        />
+                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"/>
+                        <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+                        <line x1="12" y1="17" x2="12.01" y2="17"/>
                       </svg>
                     </a>
                   </div>
@@ -2193,6 +2225,7 @@ async function generateBatchQRCodes(format: 'png' | 'svg' | 'jpg') {
         </AccordionItem>
       </Accordion>
     </section>
+    </div>
   </div>
 
   <!-- Fallback modal for manual copy in Safari -->

@@ -1307,7 +1307,21 @@ async function generateBatchQRCodes(format: 'png' | 'svg' | 'jpg') {
     <!-- Main content -->
     <Teleport to="#main-content-container" v-if="mainContentContainer != null">
       <div id="main-content">
-        <h2 class="mb-6 text-2xl font-extrabold" style="color: var(--text-main); letter-spacing: -1px;">{{ t('Preview') }}</h2>
+        <div class="flex items-center justify-between mb-6">
+          <h2 class="text-2xl font-extrabold" style="color: var(--text-main); letter-spacing: -1px;">{{ t('Preview') }}</h2>
+          <button
+            id="load-qr-code-config-button"
+            class="btn btn-secondary flex items-center gap-2"
+            style="height: 36px; background: white; font-size: 13px;"
+            @click="loadQrConfigFromFile"
+            :aria-label="t('Load Configuration')"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+            </svg>
+            {{ t('Load Config') }}
+          </button>
+        </div>
         <div
           id="qr-code-container"
           class="qr-stage mb-6"
@@ -1438,18 +1452,6 @@ async function generateBatchQRCodes(format: 'png' | 'svg' | 'jpg') {
               JSON
             </button>
           </div>
-          <button
-            id="load-qr-code-config-button"
-            class="btn btn-secondary w-full flex items-center justify-center gap-2"
-            style="height: 40px; background: white;"
-            @click="loadQrConfigFromFile"
-            :aria-label="t('Load Configuration')"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-            </svg>
-            {{ t('Load Config') }}
-          </button>
         </div>
       </div>
     </Teleport>
@@ -1460,7 +1462,7 @@ async function generateBatchQRCodes(format: 'png' | 'svg' | 'jpg') {
         type="multiple"
         collapsible
         class="flex w-full flex-col gap-3"
-        :default-value="['qr-code-settings']"
+        :default-value="['data-settings', 'qr-code-settings']"
       >
         <AccordionItem value="frame-settings" class="accordion-item">
           <AccordionTrigger
@@ -1512,78 +1514,45 @@ async function generateBatchQRCodes(format: 'png' | 'svg' | 'jpg') {
             </section>
           </AccordionContent>
         </AccordionItem>
-        <AccordionItem value="qr-code-settings" class="accordion-item">
+        <AccordionItem value="data-settings" class="accordion-item">
           <AccordionTrigger
             class="accordion-header"
-            ><span id="qr-code-settings-title" class="text-lg font-semibold" style="color: var(--text-main);">{{ t('QR code settings') }}</span></AccordionTrigger
+            ><span id="data-settings-title" class="text-lg font-semibold" style="color: var(--text-main);">{{ t('Data to encode') }}</span></AccordionTrigger
           >
           <AccordionContent class="accordion-content">
-            <section class="w-full space-y-4" aria-labelledby="qr-code-settings-title">
-              <div>
-                <label>{{ t('Preset') }}</label>
-                <div class="flex flex-row items-center justify-start gap-2">
-                  <Combobox
-                    :items="allPresetOptions"
-                    v-model:value="selectedPresetKey"
-                    v-model:open="isPresetSelectOpen"
-                    :button-label="t('Select QR code preset')"
-                    :insert-divider-at-indexes="[0, 2]"
-                  />
-                  <button
-                    class="button grid size-10 place-items-center"
-                    @click="randomizeStyleSettings"
-                    :aria-label="t('Randomize style')"
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="24"
-                      height="24"
-                      viewBox="0 0 640 512"
-                    >
-                      <path
-                        fill="#888888"
-                        d="M274.9 34.3c-28.1-28.1-73.7-28.1-101.8 0L34.3 173.1c-28.1 28.1-28.1 73.7 0 101.8l138.8 138.8c28.1 28.1 73.7 28.1 101.8 0l138.8-138.8c28.1-28.1 28.1-73.7 0-101.8L274.9 34.3zM200 224a24 24 0 1 1 48 0a24 24 0 1 1-48 0zM96 200a24 24 0 1 1 0 48a24 24 0 1 1 0-48zm128 176a24 24 0 1 1 0-48a24 24 0 1 1 0 48zm128-176a24 24 0 1 1 0 48a24 24 0 1 1 0-48zm-128-80a24 24 0 1 1 0-48a24 24 0 1 1 0 48zm96 328c0 35.3 28.7 64 64 64h192c35.3 0 64-28.7 64-64V256c0-35.3-28.7-64-64-64H461.7c11.6 36 3.1 77-25.4 105.5L320 413.8V448zm160-120a24 24 0 1 1 0 48a24 24 0 1 1 0-48z"
-                      />
-                    </svg>
-                  </button>
-                </div>
-              </div>
+            <section class="w-full space-y-4" aria-labelledby="data-settings-title">
               <div class="w-full">
                 <div class="flex w-full flex-col flex-wrap gap-4 sm:flex-row sm:gap-x-8">
-                  <!-- Data to encode area -->
                   <div class="w-full sm:grow">
-                    <!-- Header row: Label + Mode Toggles + Use Example -->
-                    <div class="mb-4">
-                      <label for="data" class="mb-3 block">{{ t('Data to encode') }}</label>
-                      <div class="flex items-center gap-3 flex-wrap">
-                        <!-- Mode Toggle - Segmented Control -->
-                        <div class="segmented-control" style="width: fit-content;">
-                          <button
-                            :class="['segmented-btn', exportMode === ExportMode.Single ? 'active' : '']"
-                            @click="exportMode = ExportMode.Single"
-                          >
-                            {{ $t('Single') }}
-                          </button>
-                          <button
-                            :class="['segmented-btn', exportMode === ExportMode.Batch ? 'active' : '']"
-                            @click="exportMode = ExportMode.Batch"
-                          >
-                            {{ $t('Batch') }}
-                          </button>
-                        </div>
-                        <!-- Use Example Button -->
+                    <!-- Mode Toggle + Use Example -->
+                    <div class="flex items-center gap-3 flex-wrap mb-4">
+                      <!-- Mode Toggle - Segmented Control -->
+                      <div class="segmented-control" style="width: fit-content;">
                         <button
-                          v-if="exportMode === ExportMode.Single"
-                          @click="fillWithExampleData"
-                          class="btn btn-secondary gap-2"
-                          style="height: 36px; font-size: 13px; background: white; border: 1px solid var(--border-light);"
+                          :class="['segmented-btn', exportMode === ExportMode.Single ? 'active' : '']"
+                          @click="exportMode = ExportMode.Single"
                         >
-                          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M8 10h8m-8 4h6m4-9H4a1 1 0 0 0-1 1v14a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1V6a1 1 0 0 0-1-1Z"/>
-                          </svg>
-                          {{ t('Use example') }}
+                          {{ $t('Single') }}
+                        </button>
+                        <button
+                          :class="['segmented-btn', exportMode === ExportMode.Batch ? 'active' : '']"
+                          @click="exportMode = ExportMode.Batch"
+                        >
+                          {{ $t('Batch') }}
                         </button>
                       </div>
+                      <!-- Use Example Button -->
+                      <button
+                        v-if="exportMode === ExportMode.Single"
+                        @click="fillWithExampleData"
+                        class="btn btn-secondary gap-2"
+                        style="height: 36px; font-size: 13px; background: white; border: 1px solid var(--border-light);"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <path d="M8 10h8m-8 4h6m4-9H4a1 1 0 0 0-1 1v14a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1V6a1 1 0 0 0-1-1Z"/>
+                        </svg>
+                        {{ t('Use example') }}
+                      </button>
                     </div>
                     <!-- Single Mode Input -->
                     <div v-if="exportMode === ExportMode.Single" class="flex flex-col items-start w-full">
@@ -1971,6 +1940,45 @@ async function generateBatchQRCodes(format: 'png' | 'svg' | 'jpg') {
                       </div>
                     </template>
                   </div>
+                </div>
+              </div>
+            </section>
+          </AccordionContent>
+        </AccordionItem>
+        <AccordionItem value="qr-code-settings" class="accordion-item">
+          <AccordionTrigger
+            class="accordion-header"
+            ><span id="qr-code-settings-title" class="text-lg font-semibold" style="color: var(--text-main);">{{ t('QR code settings') }}</span></AccordionTrigger
+          >
+          <AccordionContent class="accordion-content">
+            <section class="w-full space-y-4" aria-labelledby="qr-code-settings-title">
+              <div>
+                <label>{{ t('Preset') }}</label>
+                <div class="flex flex-row items-center justify-start gap-2">
+                  <Combobox
+                    :items="allPresetOptions"
+                    v-model:value="selectedPresetKey"
+                    v-model:open="isPresetSelectOpen"
+                    :button-label="t('Select QR code preset')"
+                    :insert-divider-at-indexes="[0, 2]"
+                  />
+                  <button
+                    class="button grid size-10 place-items-center"
+                    @click="randomizeStyleSettings"
+                    :aria-label="t('Randomize style')"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="24"
+                      height="24"
+                      viewBox="0 0 640 512"
+                    >
+                      <path
+                        fill="#888888"
+                        d="M274.9 34.3c-28.1-28.1-73.7-28.1-101.8 0L34.3 173.1c-28.1 28.1-28.1 73.7 0 101.8l138.8 138.8c28.1 28.1 73.7 28.1 101.8 0l138.8-138.8c28.1-28.1 28.1-73.7 0-101.8L274.9 34.3zM200 224a24 24 0 1 1 48 0a24 24 0 1 1-48 0zM96 200a24 24 0 1 1 0 48a24 24 0 1 1 0-48zm128 176a24 24 0 1 1 0-48a24 24 0 1 1 0 48zm128-176a24 24 0 1 1 0 48a24 24 0 1 1 0-48zm-128-80a24 24 0 1 1 0-48a24 24 0 1 1 0 48zm96 328c0 35.3 28.7 64 64 64h192c35.3 0 64-28.7 64-64V256c0-35.3-28.7-64-64-64H461.7c11.6 36 3.1 77-25.4 105.5L320 413.8V448zm160-120a24 24 0 1 1 0 48a24 24 0 1 1 0-48z"
+                      />
+                    </svg>
+                  </button>
                 </div>
               </div>
               <div class="w-full">

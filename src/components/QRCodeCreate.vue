@@ -1351,7 +1351,7 @@ async function generateBatchQRCodes(format: 'png' | 'svg' | 'jpg') {
         </div>
         <div
           id="qr-code-container"
-          class="qr-stage mb-6"
+          class="qr-stage mb-5"
           :class="[
             showFrame && ['left', 'right'].includes(frameTextPosition) && 'scale-[0.7] md:scale-100'
           ]"
@@ -2045,9 +2045,9 @@ async function generateBatchQRCodes(format: 'png' | 'svg' | 'jpg') {
                   </button>
                 </div>
               </div>
-              <div class="flex flex-row items-center gap-2">
-                <label for="with-background">
-                  {{ t('With background') }}
+              <div class="flex h-fit w-full flex-row items-center justify-start gap-2.5 py-5">
+                <label for="with-background" class="mb-0 align-middle leading-4">
+                  {{ t('With Background') }}
                 </label>
                 <input id="with-background" type="checkbox" v-model="includeBackground" />
               </div>
@@ -2059,7 +2059,7 @@ async function generateBatchQRCodes(format: 'png' | 'svg' | 'jpg') {
                     :class="[!includeBackground && 'opacity-30', 'color-picker-wrapper cursor-pointer']"
                     for="background-color"
                   >
-                    <div class="color-swatch" :style="{ background: styleBackground, border: styleBackground === '#ffffff' ? '1px solid #ddd' : 'none' }"></div>
+                    <div class="color-swatch" :style="{ background: styleBackground, border: '1.5px solid #ffffff', boxShadow: styleBackground === '#ffffff' ? '0 0 0 1px #ddd' : 'none' }"></div>
                     <span class="text-sm font-semibold" style="color: var(--text-main);">{{ t('Bg') }}</span>
                     <input
                       id="background-color"
@@ -2068,7 +2068,7 @@ async function generateBatchQRCodes(format: 'png' | 'svg' | 'jpg') {
                     />
                   </label>
                   <label class="color-picker-wrapper cursor-pointer" for="dots-color">
-                    <div class="color-swatch" :style="{ background: dotsOptionsColor }"></div>
+                    <div class="color-swatch" :style="{ background: dotsOptionsColor, border: '1.5px solid #ffffff', boxShadow: dotsOptionsColor === '#ffffff' ? '0 0 0 1px #ddd' : 'none' }"></div>
                     <span class="text-sm font-semibold" style="color: var(--text-main);">{{ t('Dots') }}</span>
                     <input
                       id="dots-color"
@@ -2077,7 +2077,7 @@ async function generateBatchQRCodes(format: 'png' | 'svg' | 'jpg') {
                     />
                   </label>
                   <label class="color-picker-wrapper cursor-pointer" for="corners-square-color">
-                    <div class="color-swatch" :style="{ background: cornersSquareOptionsColor }"></div>
+                    <div class="color-swatch" :style="{ background: cornersSquareOptionsColor, border: '1.5px solid #ffffff', boxShadow: cornersSquareOptionsColor === '#ffffff' ? '0 0 0 1px #ddd' : 'none' }"></div>
                     <span class="text-sm font-semibold" style="color: var(--text-main);">{{ t('Corners') }}</span>
                     <input
                       id="corners-square-color"
@@ -2170,7 +2170,7 @@ async function generateBatchQRCodes(format: 'png' | 'svg' | 'jpg') {
               </div>
               <div
                 id="dots-squares-settings"
-                class="flex items-center justify-between pt-[30px] h-fit"
+                class="flex flex-wrap items-start justify-start gap-5 pt-[30px] h-fit"
               >
                 <div class="input-group !mb-0">
                   <label for="dots-type">{{ t('Dots type') }}</label>

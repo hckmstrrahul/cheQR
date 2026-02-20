@@ -1323,7 +1323,7 @@ async function generateBatchQRCodes(format: 'png' | 'svg' | 'jpg') {
     <Teleport to="#main-content-container" v-if="mainContentContainer != null">
       <div id="main-content">
         <div class="flex items-center justify-between mb-6">
-          <h2 class="text-2xl font-extrabold" style="color: var(--text-main); letter-spacing: -1px;">{{ t('Preview') }}</h2>
+          <h2 class="text-2xl font-semibold" style="color: var(--text-main);">{{ t('Preview') }}</h2>
           <button 
             id="load-qr-code-config-button"
             class="btn btn-secondary shrink-0 gap-2" 

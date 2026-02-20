@@ -4,24 +4,24 @@ import MobileMenu from '@/components/MobileMenu.vue'
 import QRCodeScan from '@/components/QRCodeScan.vue'
 import QRCodeCreate from '@/components/QRCodeCreate.vue'
 import AppFooter from '@/components/AppFooter.vue'
-import useDarkModePreference from '@/utils/useDarkModePreference'
 import { computed, ref, onMounted, onUnmounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 const { t } = useI18n()
-const { isDarkMode, isDarkModePreferenceSetBySystem, toggleDarkModePreference } =
-  useDarkModePreference()
 
 const capturedData = ref<string>('')
 const qrCodeScanRef = ref<InstanceType<typeof QRCodeScan> | null>(null)
 
 const lastScrollTop = ref(0)
 const isHeaderCollapsed = ref(false)
+const isHeaderSticky = ref(false)
 const scrollThreshold = 50
 
 const handleScroll = () => {
   const currentScrollTop = document.querySelector('#app')?.scrollTop
-  if (!currentScrollTop) return
+  if (currentScrollTop === undefined) return
+
+  isHeaderSticky.value = currentScrollTop > 0
 
   if (currentScrollTop > lastScrollTop.value && currentScrollTop > scrollThreshold) {
     isHeaderCollapsed.value = true
@@ -72,8 +72,8 @@ const isModeToggleDisabled = computed(() => {
   <main class="relative min-h-screen" style="background-color: var(--bg-body)">
     <!-- Desktop header - Dark background -->
     <header
-      class="sticky top-0 z-50 hidden h-20 items-center justify-between px-8 md:flex"
-      style="background-color: #09090b"
+      class="sticky top-0 z-50 hidden h-20 items-center justify-between px-8 md:flex transition-colors duration-200"
+      :style="{ backgroundColor: isHeaderSticky ? 'var(--accent-hover)' : 'var(--accent-primary)' }"
     >
       <a href="/" class="flex items-center gap-2 no-underline hover:opacity-100">
         <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -108,58 +108,6 @@ const isModeToggleDisabled = computed(() => {
       </div>
 
       <div class="flex items-center gap-2">
-        <button
-          class="flex h-10 w-10 items-center justify-center rounded-full transition-all"
-          style="background: rgba(255, 255, 255, 0.1)"
-          @click="toggleDarkModePreference"
-          :aria-label="t('Toggle dark mode')"
-        >
-          <span v-if="isDarkModePreferenceSetBySystem">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24">
-              <g fill="rgba(255,255,255,0.7)">
-                <path d="M12 16a4 4 0 0 0 0-8z" />
-                <path
-                  fill-rule="evenodd"
-                  d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10s10-4.477 10-10S17.523 2 12 2m0 2v4a4 4 0 1 0 0 8v4a8 8 0 1 0 0-16"
-                  clip-rule="evenodd"
-                />
-              </g>
-            </svg>
-          </span>
-          <span v-else-if="isDarkMode">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="rgba(255,255,255,0.7)"
-              stroke-width="2"
-              width="20"
-              height="20"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"
-              />
-            </svg>
-          </span>
-          <span v-else>
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="rgba(255,255,255,0.7)"
-              viewBox="0 0 24 24"
-              stroke-width="2"
-              width="20"
-              height="20"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"
-              />
-            </svg>
-          </span>
-        </button>
         <LanguageSelector :dark-header="true" />
       </div>
     </header>
@@ -203,11 +151,7 @@ const isModeToggleDisabled = computed(() => {
             <span>{{ t('Scan') }}</span>
           </button>
 
-          <MobileMenu
-            :isDarkMode="isDarkMode"
-            :isDarkModePreferenceSetBySystem="isDarkModePreferenceSetBySystem"
-            @toggle-dark-mode="toggleDarkModePreference"
-          />
+          <MobileMenu />
         </div>
       </div>
     </div>
@@ -215,6 +159,7 @@ const isModeToggleDisabled = computed(() => {
     <!-- Main content area -->
     <div
       class="relative z-10 mx-auto min-h-[calc(100vh-80px)] w-full max-w-[1600px] p-6 pt-20 md:pt-6"
+      style="background-color: var(--accent-primary)"
     >
       <div v-if="appMode === AppMode.Create">
         <QRCodeCreate :initial-data="capturedData" />

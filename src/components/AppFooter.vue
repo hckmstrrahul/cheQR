@@ -9,7 +9,7 @@ const hideCredits = ['1', 'true'].includes((import.meta.env.VITE_HIDE_CREDITS ??
   <footer
     v-if="!hideCredits"
     class="hidden h-10 items-center justify-center gap-4 text-xs md:flex"
-    style="background: #09090b; color: rgba(255, 255, 255, 0.4)"
+    style="background-color: var(--accent-primary); color: rgba(255, 255, 255, 0.4)"
   >
     <span class="font-medium">cheQR v1.0</span>
     <span>•</span>

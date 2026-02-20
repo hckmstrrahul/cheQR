@@ -19,7 +19,7 @@ export const theme = {
   },
   extend: {
     fontFamily: {
-      sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+      sans: ['Google Sans', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
       display: ['Space Grotesk', 'system-ui', 'sans-serif']
     },
     colors: {

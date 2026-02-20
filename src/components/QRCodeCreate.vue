@@ -1211,7 +1211,7 @@ async function generateBatchQRCodes(format: 'png' | 'svg' | 'jpg') {
       v-if="isLarge"
       ref="mainContentContainer"
       id="main-content-container"
-      class="preview-panel sticky top-6 flex w-[420px] shrink-0 flex-col p-8 overflow-y-auto"
+      class="preview-panel sticky top-0 flex w-[420px] shrink-0 flex-col p-8 overflow-y-auto"
       style="height: fit-content;"
     ></div>
     <!-- Bottom sheet on small screens -->

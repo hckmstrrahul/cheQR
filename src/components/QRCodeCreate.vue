@@ -211,25 +211,25 @@ function randomizeStyleSettings() {
   styleBackground.value = createRandomColor()
 }
 
-function uploadImage() {
-  console.debug('Uploading image')
-  const imageInput = document.createElement('input')
-  imageInput.type = 'file'
-  imageInput.accept = 'image/*'
-  imageInput.onchange = (event: Event) => {
-    const target = event.target as HTMLInputElement
-    if (target.files) {
-      const file = target.files[0]
-      const reader = new FileReader()
-      reader.onload = (event: ProgressEvent<FileReader>) => {
-        const target = event.target as FileReader
-        const result = target.result as string
-        image.value = result
-      }
-      reader.readAsDataURL(file)
-    }
+const logoFileInput = ref<HTMLInputElement | null>(null)
+
+const handleLogoUploadClick = () => {
+  nextTick(() => {
+    logoFileInput.value?.click()
+  })
+}
+
+const onLogoFileChange = (event: Event) => {
+  const target = event.target as HTMLInputElement
+  if (!target.files || target.files.length === 0) return
+  const file = target.files[0]
+  const reader = new FileReader()
+  reader.onload = (e: ProgressEvent<FileReader>) => {
+    const result = (e.target as FileReader).result as string
+    if (result) image.value = result
   }
-  imageInput.click()
+  reader.readAsDataURL(file)
+  target.value = ''
 }
 // #endregion
 
@@ -1080,6 +1080,12 @@ const getFileFromInputEvent = (event: InputEvent) => {
   return null
 }
 
+const handleCsvUploadClick = () => {
+  nextTick(() => {
+    fileInput.value?.click()
+  })
+}
+
 const onBatchInputFileUpload = (event: Event) => {
   isBatchExportSuccess.value = false
   let file: File | null = getFileFromInputEvent(event as InputEvent)
@@ -1871,12 +1877,22 @@ async function generateBatchQRCodes(format: 'png' | 'svg' | 'jpg') {
                     <template v-if="exportMode === ExportMode.Batch">
                       <template v-if="!inputFileForBatchEncoding">
                         <BatchExportFieldsGuide />
+                        <input
+                          ref="fileInput"
+                          type="file"
+                          accept=".csv,.txt"
+                          class="hidden"
+                          aria-hidden="true"
+                          tabindex="-1"
+                          @change="onBatchInputFileUpload"
+                        />
                         <button
+                          type="button"
                           class="!ms-0 mt-4 flex items-center justify-center rounded-lg border-2 border-dashed border-gray-300 p-1 py-4 text-center text-input"
                           :aria-label="t('Choose a CSV file containing data to encode')"
-                          @click="fileInput?.click()"
-                          @keyup.enter="fileInput?.click()"
-                          @keyup.space="fileInput?.click()"
+                          @click="handleCsvUploadClick"
+                          @keydown.enter.prevent="handleCsvUploadClick"
+                          @keydown.space.prevent="handleCsvUploadClick"
                           @dragover.prevent
                           @drop.prevent="onBatchInputFileUpload"
                         >
@@ -1897,13 +1913,6 @@ async function generateBatchQRCodes(format: 'png' | 'svg' | 'jpg') {
                               {{ $t('Upload a CSV file') }}
                             </p>
                           </div>
-                          <input
-                            ref="fileInput"
-                            type="file"
-                            accept=".csv,.txt"
-                            class="hidden"
-                            @change="onBatchInputFileUpload"
-                          />
                         </button>
                       </template>
                       <div v-else-if="isValidCsv" class="p-4 text-center">
@@ -2042,6 +2051,15 @@ async function generateBatchQRCodes(format: 'png' | 'svg' | 'jpg') {
                 <label for="image-url" class="mb-2 block">{{ t('Logo image') }}</label>
                 <div class="flex gap-2">
                   <input
+                    ref="logoFileInput"
+                    type="file"
+                    accept="image/*"
+                    class="hidden"
+                    aria-hidden="true"
+                    tabindex="-1"
+                    @change="onLogoFileChange"
+                  />
+                  <input
                     name="image-url"
                     class="text-input flex-1"
                     id="image-url"
@@ -2049,10 +2067,11 @@ async function generateBatchQRCodes(format: 'png' | 'svg' | 'jpg') {
                     :placeholder="t('Paste image URL or upload')"
                     v-model="image"
                   />
-                  <button 
-                    class="btn btn-secondary shrink-0 gap-2" 
+                  <button
+                    type="button"
+                    class="btn btn-secondary shrink-0 gap-2"
                     style="height: 52px;"
-                    @click="uploadImage"
+                    @click="handleLogoUploadClick"
                     :aria-label="t('Upload image')"
                   >
                     <svg

@@ -2,7 +2,7 @@
 
 **The world's simplest, most stylish custom QR code generator.**
 
-Create beautiful, fully customizable QR codes in seconds. Scan any QR code instantly. Free forever.
+Create beautiful, fully customizable QR codes in seconds. Scan any QR code instantly. Generate Bulk QR codes and JSON configs.
 
 ---
 

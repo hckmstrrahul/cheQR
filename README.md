@@ -11,7 +11,7 @@ Create beautiful, fully customizable QR codes in seconds. Scan any QR code insta
 ### QR Code Creation
 - **Customizable Styles** — Choose dot types (dots, rounded, classy, classy-rounded, square, extra-rounded), corner square types, and corner dot types
 - **Full Color Control** — Background, dots, corner squares, and corner dots all have independent color pickers
-- **Logo/Image Embedding** — Upload any image or paste a URL to embed a logo in your QR code
+- **Logo/Image Embedding** — Upload an image from your device or paste a URL to embed a logo in your QR code
 - **Presets** — Pre-built style presets for one-click beautiful QR codes (Padlet, Vercel, Supabase, VueJS, and more)
 - **Randomize** — One-click random style generation for creative exploration
 - **Error Correction Levels** — L (7%), M (15%), Q (25%), H (30%) with intelligent suggestions based on data size
@@ -41,13 +41,15 @@ Structured input forms for generating valid QR code data:
 - **SVG** — Vector export (limited support)
 - **Clipboard** — Copy QR code image directly to clipboard
 - **Config Save/Load** — Save QR code configurations as JSON, load them later or share with others
-- **Custom Filenames** — Name your exported files
+- **Custom Filenames** — Name your exported files (single file or ZIP base name in batch)
+- **Batch mode export switcher** — When a CSV is loaded, the Export card shows an **Individual** / **Batch** switcher: Individual exports or copies the current preview QR; Batch downloads all QR codes as a single ZIP (PNG, JPG, or SVG)
 
 ### Batch Export
-- **CSV Import** — Upload a CSV file with multiple data entries
+- **CSV Import** — Upload a CSV file (click or drag-and-drop) with multiple data entries
 - **Supports vCard Batch** — Batch create contact QR codes from CSV
 - **Frame Text Per Row** — Custom frame text for each QR code in the batch
-- **ZIP Download** — All QR codes packaged in a single ZIP file
+- **Individual / Batch export** — In the Export preview panel: choose to export the current row only (Individual) or download all QR codes as a ZIP (Batch)
+- **ZIP Download** — All QR codes packaged in a single ZIP file; ZIP filename uses the Export card “File name” field
 - **Progress Tracking** — Real-time progress during batch generation
 
 ### QR Code Scanning

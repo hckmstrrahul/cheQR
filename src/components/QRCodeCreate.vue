@@ -736,6 +736,10 @@ const isExportButtonDisabled = computed(() => {
   return dataStringsFromCsv.value.length === 0
 })
 
+const isBatchDownloadDisabled = computed(
+  () => isExportingBatchQRs.value || dataStringsFromCsv.value.length === 0
+)
+
 const PREVIEW_QRCODE_DIM_UNIT = 200
 
 /**
@@ -833,34 +837,30 @@ async function copyQRToClipboard() {
  * @param format The format to download: 'png', 'svg', or 'jpg'
  */
 function downloadQRImage(format: 'png' | 'svg' | 'jpg') {
-  if (exportMode.value === ExportMode.Single) {
-    // Sanitize filename to remove invalid characters
-    const sanitizedFilename = (exportFilename.value || 'qr-code').replace(/[^a-zA-Z0-9_-]/g, '_')
-
-    const formatConfig = {
-      png: { fn: downloadPngElement, filename: `${sanitizedFilename}.png` },
-      svg: { fn: downloadSvgElement, filename: `${sanitizedFilename}.svg` },
-      jpg: {
-        fn: downloadJpgElement,
-        filename: `${sanitizedFilename}.jpg`,
-        extraOptions: { bgcolor: 'white' }
-      }
-    }[format]
-
-    const el = document.getElementById('element-to-export')
-    if (!el) {
-      return
-    }
-
-    formatConfig.fn(
-      el,
-      formatConfig.filename,
-      { ...getExportDimensions(), ...formatConfig.extraOptions },
-      styledBorderRadiusFormatted.value
-    )
-  } else {
+  const isBatchZip = exportMode.value === ExportMode.Batch && batchExportTarget.value === BatchExportTarget.BatchDownload
+  if (isBatchZip) {
     generateBatchQRCodes(format)
+    return
   }
+  // Single mode or Batch + Individual QR: export current preview
+  const sanitizedFilename = (exportFilename.value || 'qr-code').replace(/[^a-zA-Z0-9_-]/g, '_')
+  const formatConfig = {
+    png: { fn: downloadPngElement, filename: `${sanitizedFilename}.png` },
+    svg: { fn: downloadSvgElement, filename: `${sanitizedFilename}.svg` },
+    jpg: {
+      fn: downloadJpgElement,
+      filename: `${sanitizedFilename}.jpg`,
+      extraOptions: { bgcolor: 'white' }
+    }
+  }[format]
+  const el = document.getElementById('element-to-export')
+  if (!el) return
+  formatConfig.fn(
+    el,
+    formatConfig.filename,
+    { ...getExportDimensions(), ...formatConfig.extraOptions },
+    styledBorderRadiusFormatted.value
+  )
 }
 //#endregion
 
@@ -1009,8 +1009,15 @@ enum ExportMode {
   Batch = 'batch'
 }
 
+/** When in Batch mode with CSV loaded: export current preview only vs download all as ZIP */
+enum BatchExportTarget {
+  Individual = 'individual',
+  BatchDownload = 'batch'
+}
+
 const exportFilename = ref('qr-code')
 const exportMode = ref(ExportMode.Single)
+const batchExportTarget = ref<BatchExportTarget>(BatchExportTarget.Individual)
 const dataStringsFromCsv = ref<string[]>([])
 const frameTextsFromCsv = ref<string[]>([])
 const fileNamesFromCsv = ref<string[]>([])
@@ -1204,11 +1211,13 @@ async function generateBatchQRCodes(format: 'png' | 'svg' | 'jpg') {
       await sleep(100)
     }
 
+    const zipBaseName = (exportFilename.value || 'qr-codes').replace(/[^a-zA-Z0-9_-]/g, '_')
     zip.generateAsync({ type: 'blob' }).then((content) => {
       const link = document.createElement('a')
       link.href = URL.createObjectURL(content)
-      link.download = `qr-codes.zip`
+      link.download = `${zipBaseName}.zip`
       link.click()
+      URL.revokeObjectURL(link.href)
       isBatchExportSuccess.value = true
     })
   } catch (error) {
@@ -1435,7 +1444,34 @@ async function generateBatchQRCodes(format: 'png' | 'svg' | 'jpg') {
         <!-- Export Card -->
         <div class="export-card">
           <h3 class="text-lg font-semibold mb-4" style="color: var(--text-main);">{{ t('Export QR Code') }}</h3>
-          <div v-if="exportMode === ExportMode.Single" class="mb-4">
+          <!-- Individual QR / Batch download switcher (when Batch mode with CSV loaded) -->
+          <div
+            v-if="exportMode === ExportMode.Batch && dataStringsFromCsv.length > 0"
+            class="segmented-control mb-4"
+            style="width: fit-content;"
+            role="group"
+            :aria-label="t('Export target')"
+          >
+            <button
+              type="button"
+              :class="['segmented-btn', batchExportTarget === BatchExportTarget.Individual ? 'active' : '']"
+              @click="batchExportTarget = BatchExportTarget.Individual"
+              :aria-label="t('Individual QR')"
+              :aria-pressed="batchExportTarget === BatchExportTarget.Individual"
+            >
+              {{ t('Individual QR') }}
+            </button>
+            <button
+              type="button"
+              :class="['segmented-btn', batchExportTarget === BatchExportTarget.BatchDownload ? 'active' : '']"
+              @click="batchExportTarget = BatchExportTarget.BatchDownload"
+              :aria-label="t('Batch download')"
+              :aria-pressed="batchExportTarget === BatchExportTarget.BatchDownload"
+            >
+              {{ t('Batch download') }}
+            </button>
+          </div>
+          <div class="mb-4">
             <label for="export-filename" class="input-label">{{ t('File name') }}</label>
             <input
               id="export-filename"
@@ -1443,77 +1479,114 @@ async function generateBatchQRCodes(format: 'png' | 'svg' | 'jpg') {
               class="text-input"
               style="background: white;"
               v-model="exportFilename"
-              placeholder="my-qr-code"
+              :placeholder="(exportMode === ExportMode.Batch && batchExportTarget === BatchExportTarget.BatchDownload) ? 'qr-codes' : 'my-qr-code'"
             />
           </div>
-          <!-- All export buttons in one grid -->
-          <div class="flex flex-wrap gap-2 mb-4">
-            <button
-              id="download-qr-image-button-png"
-              class="btn btn-secondary"
-              style="height: 40px; background: white;"
-              @click="() => downloadQRImage('png')"
-              :disabled="isExportButtonDisabled"
-              :aria-label="t('Download QR Code as PNG')"
-            >
-              PNG
-            </button>
-            <button
-              id="download-qr-image-button-jpg"
-              class="btn btn-secondary"
-              style="height: 40px; background: white;"
-              @click="() => downloadQRImage('jpg')"
-              :disabled="isExportButtonDisabled"
-              :aria-label="t('Download QR Code as JPG')"
-            >
-              JPG
-            </button>
-            <button
-              id="download-qr-image-button-svg"
-              class="btn btn-secondary"
-              style="height: 40px; background: white;"
-              @click="() => downloadQRImage('svg')"
-              :disabled="isExportButtonDisabled"
-              :aria-label="t('Download QR Code as SVG')"
-            >
-              SVG
-            </button>
-            <button
-              v-if="exportMode !== ExportMode.Batch"
-              id="copy-qr-image-button"
-              class="btn btn-secondary"
-              style="height: 40px; background: white;"
-              @click="copyQRToClipboard"
-              :disabled="isExportButtonDisabled"
-              :aria-label="t('Copy QR Code to clipboard')"
-            >
-              <svg
-                v-if="isCopySuccess"
-                xmlns="http://www.w3.org/2000/svg"
-                width="18"
-                height="18"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2.5"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                style="color: #16a34a;"
+          <!-- Individual QR: single export buttons + Copy + JSON -->
+          <template v-if="exportMode === ExportMode.Single || batchExportTarget === BatchExportTarget.Individual">
+            <div class="flex flex-wrap gap-2 mb-4">
+              <button
+                id="download-qr-image-button-png"
+                class="btn btn-secondary"
+                style="height: 40px; background: white;"
+                @click="() => downloadQRImage('png')"
+                :disabled="isExportButtonDisabled"
+                :aria-label="t('Download QR Code as PNG')"
               >
-                <polyline points="20 6 9 17 4 12"></polyline>
-              </svg>
-              <span v-else>{{ t('Copy Image') }}</span>
-            </button>
-            <button
-              id="save-qr-code-config-button"
-              class="btn btn-secondary"
-              style="height: 40px; background: white;"
-              @click="downloadQRConfig"
-              :aria-label="t('Save QR Code configuration')"
-            >
-              JSON
-            </button>
-          </div>
+                PNG
+              </button>
+              <button
+                id="download-qr-image-button-jpg"
+                class="btn btn-secondary"
+                style="height: 40px; background: white;"
+                @click="() => downloadQRImage('jpg')"
+                :disabled="isExportButtonDisabled"
+                :aria-label="t('Download QR Code as JPG')"
+              >
+                JPG
+              </button>
+              <button
+                id="download-qr-image-button-svg"
+                class="btn btn-secondary"
+                style="height: 40px; background: white;"
+                @click="() => downloadQRImage('svg')"
+                :disabled="isExportButtonDisabled"
+                :aria-label="t('Download QR Code as SVG')"
+              >
+                SVG
+              </button>
+              <button
+                id="copy-qr-image-button"
+                class="btn btn-secondary"
+                style="height: 40px; background: white;"
+                @click="copyQRToClipboard"
+                :disabled="isExportButtonDisabled"
+                :aria-label="t('Copy QR Code to clipboard')"
+              >
+                <svg
+                  v-if="isCopySuccess"
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  style="color: #16a34a;"
+                >
+                  <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+                <span v-else>{{ t('Copy Image') }}</span>
+              </button>
+              <button
+                id="save-qr-code-config-button"
+                class="btn btn-secondary"
+                style="height: 40px; background: white;"
+                @click="downloadQRConfig"
+                :aria-label="t('Save QR Code configuration')"
+              >
+                JSON
+              </button>
+            </div>
+          </template>
+          <!-- Batch download: download all as ZIP -->
+          <template v-else-if="batchExportTarget === BatchExportTarget.BatchDownload">
+            <p class="text-sm text-gray-500 dark:text-gray-400 mb-2">{{ t('Download all') }}</p>
+            <div class="flex flex-wrap gap-2 mb-4">
+              <button
+                type="button"
+                class="btn btn-secondary"
+                style="height: 40px; background: white;"
+                :disabled="isBatchDownloadDisabled"
+                @click="generateBatchQRCodes('png')"
+                :aria-label="t('Download all QR codes as PNG (ZIP)')"
+              >
+                PNG
+              </button>
+              <button
+                type="button"
+                class="btn btn-secondary"
+                style="height: 40px; background: white;"
+                :disabled="isBatchDownloadDisabled"
+                @click="generateBatchQRCodes('jpg')"
+                :aria-label="t('Download all QR codes as JPG (ZIP)')"
+              >
+                JPG
+              </button>
+              <button
+                type="button"
+                class="btn btn-secondary"
+                style="height: 40px; background: white;"
+                :disabled="isBatchDownloadDisabled"
+                @click="generateBatchQRCodes('svg')"
+                :aria-label="t('Download all QR codes as SVG (ZIP)')"
+              >
+                SVG
+              </button>
+            </div>
+          </template>
         </div>
       </div>
     </Teleport>

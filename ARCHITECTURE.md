@@ -64,6 +64,8 @@ DOM Element (#element-to-export)
   └──→ dom-to-svg ──→ SVG string ──→ Download
 ```
 
+**Export target (Batch mode):** When a CSV is loaded, the Export card shows an **Individual** / **Batch** switcher (`BatchExportTarget`). **Individual** exports or copies the current preview QR (same as single export). **Batch** runs `generateBatchQRCodes(format)` and produces one ZIP; the ZIP filename is taken from the Export card “File name” field (sanitized).
+
 ### QR Code Scanning
 
 ```
@@ -93,15 +95,24 @@ Input Source
 ### Batch Export
 
 ```
-CSV File Upload
-  │
+CSV File Upload (hidden <input type="file"> ref, triggered by button click / drag-drop)
+  │  handleCsvUploadClick() → nextTick → fileInput.value?.click()
   ▼
 parseCSV() ──→ validateCSVData()
                     │
                     ▼
-          processCsvDataForBatch()
+          processCsvDataForBatch() → dataStringsFromCsv, frameTextsFromCsv, fileNamesFromCsv
                     │
                     ▼
+         Export card shows Individual / Batch switcher (when dataStringsFromCsv.length > 0)
+                    │
+         ┌──────────┴──────────┐
+         │ Individual          │ Batch (batchExportTarget === BatchExportTarget.BatchDownload)
+         │ Export current row  │ User clicks PNG/JPG/SVG in Export card
+         │ (PNG/JPG/SVG/Copy)  │ → generateBatchQRCodes(format)
+         └─────────────────────┘
+                    │
+                    ▼ (Batch path)
          ┌──────────────────────┐
          │ For each row:        │
          │  1. Set data + frame │
@@ -111,8 +122,10 @@ parseCSV() ──→ validateCSVData()
          └──────────────────────┘
                     │
                     ▼
-            ZIP download (.zip)
+            ZIP download (exportFilename.value || 'qr-codes').zip
 ```
+
+**File uploads:** CSV and logo uploads use a **template-bound hidden file input** plus a ref; the visible button calls `ref.value?.click()` inside `nextTick()` so the system file picker opens reliably. Logo: `logoFileInput` ref, `onLogoFileChange()` reads the file and sets `image` to a data URL.
 
 ---
 
@@ -125,6 +138,8 @@ cheQR uses Vue 3 Composition API with `ref` and `computed` — no external store
 | QR code style settings | `QRCodeCreate.vue` | localStorage (auto-save) |
 | Selected preset | `QRCodeCreate.vue` | localStorage |
 | Frame settings | `QRCodeCreate.vue` | localStorage |
+| Export mode (Single/Batch) | `QRCodeCreate.vue` | None (session) |
+| Batch export target (Individual/Batch) | `QRCodeCreate.vue` | None (session); only relevant when Batch mode + CSV loaded |
 | App mode (Create/Scan) | `App.vue` | None (session only) |
 | Language preference | `LanguageSelector.vue` | localStorage |
 | Scanned data | `QRCodeScan.vue` | None (passed via ref) |

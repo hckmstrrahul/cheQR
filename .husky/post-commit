@@ -21,11 +21,11 @@ CHANGED_FILES=$(git diff HEAD~1 HEAD --name-only || true)
 if echo "$CHANGED_FILES" | grep -q "locales/en.json"; then
     printf "${GREEN}✓ Detected changes in locales/en.json${NC}\n"
     
-    # Check if Crowdin CLI is installed
+    # Check if Crowdin CLI is installed (optional: skip with warning if not)
     if ! command -v crowdin &> /dev/null; then
-        printf "${RED}✗ Crowdin CLI is not installed${NC}\n"
-        echo "Please install it using: npm install -g @crowdin/cli"
-        exit 1
+        printf "${YELLOW}⚠ Crowdin CLI is not installed - skipping sync${NC}\n"
+        echo "To enable: npm install -g @crowdin/cli"
+        exit 0
     fi
     
     # Upload source file to Crowdin

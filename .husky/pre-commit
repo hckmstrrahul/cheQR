@@ -1,4 +1,6 @@
 #!/usr/bin/env sh
 . "$(dirname -- "$0")/_/husky.sh"
 
-pnpm lint-staged
+# Use npx so the hook works when pnpm isn't in PATH (e.g. IDE git, minimal env).
+# npx runs the local lint-staged from node_modules.
+npx --no-install lint-staged

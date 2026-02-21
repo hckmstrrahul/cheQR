@@ -10,7 +10,7 @@ Create beautiful, fully customizable QR codes in seconds. Scan any QR code insta
 
 ### QR Code Creation
 - **Customizable Styles** — Choose dot types (dots, rounded, classy, classy-rounded, square, extra-rounded), corner square types, and corner dot types
-- **Full Color Control** — Background, dots, corner squares, and corner dots all have independent color pickers
+- **Full Color Control** — Dots, Corners Square, Corners Dot, and Background each have independent color pickers in the Colors section; optional With Background toggle
 - **Logo/Image Embedding** — Upload an image from your device or paste a URL to embed a logo in your QR code
 - **Presets** — Pre-built style presets for one-click beautiful QR codes (Padlet, Vercel, Supabase, VueJS, and more)
 - **Randomize** — One-click random style generation for creative exploration

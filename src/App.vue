@@ -87,7 +87,7 @@ const isModeToggleDisabled = computed(() => {
         </svg>
         <div class="flex flex-col">
           <span class="text-left text-xl font-bold tracking-tight text-white" style="letter-spacing: -0.04em">cheQR</span>
-          <span class="flex flex-col items-start justify-center text-[11px] text-left text-white/50" style="margin-top: -2px">Free stylized QR code generator</span>
+          <span class="flex flex-col items-start justify-center text-[12px] text-left text-white/85" style="margin-top: -2px">Free stylized QR code generator</span>
         </div>
       </a>
 

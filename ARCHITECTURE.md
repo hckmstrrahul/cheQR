@@ -179,6 +179,8 @@ Each preset is a `Preset` object containing:
 - `imageOptions` — Image margin
 - `style` — Background color + border radius
 
+The **Colors** section in the QR code settings UI exposes four color pickers (in order): **Dots**, **Corners Square**, **Corners Dot**, and **Bg**, plus the **With Background** checkbox. Corners Dot controls the inner dot color of the three corner squares; Corners Square controls the outer square color of those corners.
+
 Custom presets can be injected via `VITE_QR_CODE_PRESETS` environment variable (JSON string).
 
 ### Frame Presets (`framePresets.ts`)

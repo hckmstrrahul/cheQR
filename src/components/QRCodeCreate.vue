@@ -231,6 +231,10 @@ const onLogoFileChange = (event: Event) => {
   reader.readAsDataURL(file)
   target.value = ''
 }
+
+const clearLogoUrl = () => {
+  image.value = ''
+}
 // #endregion
 
 // #region /* Preset settings */
@@ -2120,7 +2124,111 @@ async function generateBatchQRCodes(format: 'png' | 'svg' | 'jpg') {
                   </button>
                 </div>
               </div>
-              <div class="w-full">
+              <div
+                id="dots-squares-settings"
+                class="flex flex-wrap items-start justify-start gap-5 pt-[20px] h-fit"
+              >
+                <div class="input-group !mb-0">
+                  <label for="dots-type">{{ t('Dots type') }}</label>
+                  <Combobox
+                    :items="dotsTypeOptions"
+                    v-model:value="dotsOptionsType"
+                    :button-label="t('Select dots type')"
+                  />
+                </div>
+                <div class="input-group !mb-0">
+                  <label for="corners-square-type">{{ t('Corners Square type') }}</label>
+                  <Combobox
+                    :items="cornersSquareTypeOptions"
+                    v-model:value="cornersSquareOptionsType"
+                    :button-label="t('Select corners square type')"
+                  />
+                </div>
+                <div class="input-group !mb-0">
+                  <label for="corners-dot-type">{{ t('Corners Dot type') }}</label>
+                  <Combobox
+                    :items="cornersDotTypeOptions"
+                    v-model:value="cornersDotOptionsType"
+                    :button-label="t('Select corners dot type')"
+                  />
+                </div>
+                <div class="input-group !mb-0">
+                  <div class="label-with-tooltip">
+                    <label for="error-correction" class="!mb-0">{{ t('Error Correction') }}</label>
+                    <a
+                      href="https://docs.uniqode.com/en/articles/7219782-what-is-the-recommended-error-correction-level-for-printing-a-qr-code"
+                      target="_blank"
+                      class="tooltip-icon"
+                      :title="t('Higher = more damage resistant, but denser QR code')"
+                      :aria-label="t('What is error correction level?')"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"/>
+                        <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+                        <line x1="12" y1="17" x2="12.01" y2="17"/>
+                      </svg>
+                    </a>
+                  </div>
+                  <Combobox
+                    :items="errorCorrectionOptions"
+                    v-model:value="errorCorrectionLevel"
+                    :button-label="t('Select error correction level')"
+                  />
+                </div>
+              </div>
+              <div class="pt-5">
+                <label class="mb-3 block">{{ t('Colors') }}</label>
+                <div id="color-settings" class="flex flex-wrap items-center gap-3">
+                  <label class="color-picker-wrapper cursor-pointer" for="dots-color">
+                    <div class="color-swatch" :style="{ background: dotsOptionsColor, border: '1.5px solid #ffffff', boxShadow: dotsOptionsColor === '#ffffff' ? '0 0 0 1px #ddd' : 'none' }"></div>
+                    <span class="text-sm font-semibold" style="color: var(--text-main);">{{ t('Dots') }}</span>
+                    <input
+                      id="dots-color"
+                      type="color"
+                      v-model="dotsOptionsColor"
+                    />
+                  </label>
+                  <label class="color-picker-wrapper cursor-pointer" for="corners-square-color">
+                    <div class="color-swatch" :style="{ background: cornersSquareOptionsColor, border: '1.5px solid #ffffff', boxShadow: cornersSquareOptionsColor === '#ffffff' ? '0 0 0 1px #ddd' : 'none' }"></div>
+                    <span class="text-sm font-semibold" style="color: var(--text-main);">{{ t('Corners Square') }}</span>
+                    <input
+                      id="corners-square-color"
+                      type="color"
+                      v-model="cornersSquareOptionsColor"
+                    />
+                  </label>
+                  <label class="color-picker-wrapper cursor-pointer" for="corners-dot-color">
+                    <div class="color-swatch" :style="{ background: cornersDotOptionsColor, border: '1.5px solid #ffffff', boxShadow: cornersDotOptionsColor === '#ffffff' ? '0 0 0 1px #ddd' : 'none' }"></div>
+                    <span class="text-sm font-semibold" style="color: var(--text-main);">{{ t('Corners Dot') }}</span>
+                    <input
+                      id="corners-dot-color"
+                      type="color"
+                      v-model="cornersDotOptionsColor"
+                    />
+                  </label>
+                  <label
+                    :inert="!includeBackground"
+                    :class="[!includeBackground && 'opacity-30', 'color-picker-wrapper cursor-pointer']"
+                    for="background-color"
+                  >
+                    <div class="color-swatch" :style="{ background: styleBackground, border: '1.5px solid #ffffff', boxShadow: styleBackground === '#ffffff' ? '0 0 0 1px #ddd' : 'none' }"></div>
+                    <span class="text-sm font-semibold" style="color: var(--text-main);">{{ t('Bg') }}</span>
+                    <input
+                      id="background-color"
+                      type="color"
+                      v-model="styleBackground"
+                    />
+                  </label>
+                  <label
+                    for="with-background"
+                    class="flex cursor-pointer items-center gap-2 self-center"
+                  >
+                    <input id="with-background" type="checkbox" v-model="includeBackground" />
+                    <span class="text-sm font-semibold" style="color: var(--text-main);">{{ t('With Background') }}</span>
+                  </label>
+                </div>
+              </div>
+              <div class="w-full pt-2.5">
                 <label for="image-url" class="mb-2 block">{{ t('Logo image') }}</label>
                 <div class="flex gap-2">
                   <input
@@ -2132,14 +2240,28 @@ async function generateBatchQRCodes(format: 'png' | 'svg' | 'jpg') {
                     tabindex="-1"
                     @change="onLogoFileChange"
                   />
-                  <input
-                    name="image-url"
-                    class="text-input flex-1"
-                    id="image-url"
-                    type="text"
-                    :placeholder="t('Paste image URL or upload')"
-                    v-model="image"
-                  />
+                  <div class="relative flex flex-1">
+                    <input
+                      name="image-url"
+                      class="text-input w-full pr-8"
+                      id="image-url"
+                      type="text"
+                      :placeholder="t('Paste image URL or upload')"
+                      v-model="image"
+                    />
+                    <button
+                      v-if="image"
+                      type="button"
+                      class="absolute right-2 top-1/2 flex -translate-y-1/2 items-center justify-center rounded p-1 text-gray-400 transition-colors hover:bg-gray-200 hover:text-gray-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-black/20"
+                      @click="clearLogoUrl"
+                      :aria-label="t('Clear logo URL')"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18" />
+                        <line x1="6" y1="6" x2="18" y2="18" />
+                      </svg>
+                    </button>
+                  </div>
                   <button
                     type="button"
                     class="btn btn-secondary shrink-0 gap-2"
@@ -2166,49 +2288,7 @@ async function generateBatchQRCodes(format: 'png' | 'svg' | 'jpg') {
                   </button>
                 </div>
               </div>
-              <div class="flex h-fit w-full flex-row items-center justify-start gap-2.5 py-5">
-                <label for="with-background" class="mb-0 align-middle leading-4">
-                  {{ t('With Background') }}
-                </label>
-                <input id="with-background" type="checkbox" v-model="includeBackground" />
-              </div>
-              <div>
-                <label class="mb-3 block">{{ t('Colors') }}</label>
-                <div id="color-settings" class="flex flex-wrap gap-3">
-                  <label
-                    :inert="!includeBackground"
-                    :class="[!includeBackground && 'opacity-30', 'color-picker-wrapper cursor-pointer']"
-                    for="background-color"
-                  >
-                    <div class="color-swatch" :style="{ background: styleBackground, border: '1.5px solid #ffffff', boxShadow: styleBackground === '#ffffff' ? '0 0 0 1px #ddd' : 'none' }"></div>
-                    <span class="text-sm font-semibold" style="color: var(--text-main);">{{ t('Bg') }}</span>
-                    <input
-                      id="background-color"
-                      type="color"
-                      v-model="styleBackground"
-                    />
-                  </label>
-                  <label class="color-picker-wrapper cursor-pointer" for="dots-color">
-                    <div class="color-swatch" :style="{ background: dotsOptionsColor, border: '1.5px solid #ffffff', boxShadow: dotsOptionsColor === '#ffffff' ? '0 0 0 1px #ddd' : 'none' }"></div>
-                    <span class="text-sm font-semibold" style="color: var(--text-main);">{{ t('Dots') }}</span>
-                    <input
-                      id="dots-color"
-                      type="color"
-                      v-model="dotsOptionsColor"
-                    />
-                  </label>
-                  <label class="color-picker-wrapper cursor-pointer" for="corners-square-color">
-                    <div class="color-swatch" :style="{ background: cornersSquareOptionsColor, border: '1.5px solid #ffffff', boxShadow: cornersSquareOptionsColor === '#ffffff' ? '0 0 0 1px #ddd' : 'none' }"></div>
-                    <span class="text-sm font-semibold" style="color: var(--text-main);">{{ t('Corners') }}</span>
-                    <input
-                      id="corners-square-color"
-                      type="color"
-                      v-model="cornersSquareOptionsColor"
-                    />
-                  </label>
-                </div>
-              </div>
-              <div class="flex items-end gap-4">
+              <div class="flex items-end gap-4 pt-5">
                 <div class="input-group flex-1">
                   <label for="width">{{ t('Width') }}</label>
                   <input
@@ -2286,58 +2366,6 @@ async function generateBatchQRCodes(format: 'png' | 'svg' | 'jpg') {
                     type="number"
                     placeholder="0"
                     v-model="imageMargin"
-                  />
-                </div>
-              </div>
-              <div
-                id="dots-squares-settings"
-                class="flex flex-wrap items-start justify-start gap-5 pt-[30px] h-fit"
-              >
-                <div class="input-group !mb-0">
-                  <label for="dots-type">{{ t('Dots type') }}</label>
-                  <Combobox
-                    :items="dotsTypeOptions"
-                    v-model:value="dotsOptionsType"
-                    :button-label="t('Select dots type')"
-                  />
-                </div>
-                <div class="input-group !mb-0">
-                  <label for="corners-square-type">{{ t('Corners Square') }}</label>
-                  <Combobox
-                    :items="cornersSquareTypeOptions"
-                    v-model:value="cornersSquareOptionsType"
-                    :button-label="t('Select corners square type')"
-                  />
-                </div>
-                <div class="input-group !mb-0">
-                  <label for="corners-dot-type">{{ t('Corners Dot') }}</label>
-                  <Combobox
-                    :items="cornersDotTypeOptions"
-                    v-model:value="cornersDotOptionsType"
-                    :button-label="t('Select corners dot type')"
-                  />
-                </div>
-                <div class="input-group !mb-0">
-                  <div class="label-with-tooltip">
-                    <label for="error-correction" class="!mb-0">{{ t('Error Correction') }}</label>
-                    <a
-                      href="https://docs.uniqode.com/en/articles/7219782-what-is-the-recommended-error-correction-level-for-printing-a-qr-code"
-                      target="_blank"
-                      class="tooltip-icon"
-                      :title="t('Higher = more damage resistant, but denser QR code')"
-                      :aria-label="t('What is error correction level?')"
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="12" cy="12" r="10"/>
-                        <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
-                        <line x1="12" y1="17" x2="12.01" y2="17"/>
-                      </svg>
-                    </a>
-                  </div>
-                  <Combobox
-                    :items="errorCorrectionOptions"
-                    v-model:value="errorCorrectionLevel"
-                    :button-label="t('Select error correction level')"
                   />
                 </div>
               </div>
